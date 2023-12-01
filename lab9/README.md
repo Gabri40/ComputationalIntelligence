@@ -1,18 +1,19 @@
-# Divide et Mutate
+# lab9.ipynb - Divide et Mutate
 
-## Components
+Fitness function is not a black box.
 
-### 1. Mutation Function
+> In genetic algorithms a multi-part chromosome is a representation of an individual solution that is composed of multiple distinct segments or parts. Each part corresponds to a subset of the solution space, and genetic operators are applied independently to each.
+> The primary motivation for using multi-part chromosomes is to exploit problem-specific structure or modularity. By dividing the solution into parts, the algorithm can focus on optimizing each part separately, potentially speeding up the convergence process. This approach is particularly useful when the problem exhibits some form of hierarchy, modularity, or separability.
 
-The `mutate` function is responsible for introducing changes to a given solution (`ind`) by randomly flipping the value of one gene. The mutation is accepted if it improves the fitness of the solution. This function serves as the primary mechanism for exploring the neighborhood of the current solution.
+Two fitness calls per iteration, one for the final.
 
-### 2. Progenitor Splitting
+## Progenitor Splitting - Segmentation
 
 The `split_progenitor` function divides the progenitor, a randomly generated binary vector representing a potential solution, into parts of a specified length (`problem_instance`). This splitting process facilitates the independent evolution of different segments of the solution.
 
-### 3. Algorithm Execution
+## Algorithm Execution
 
-The `run` function executes the local search algorithm. 
+The `run` function executes the local search algorithm.
 
 It involves the following steps:
 
@@ -20,8 +21,7 @@ It involves the following steps:
 - Splitting the progenitor into parts.
 - Iteratively mutating each part until its fitness reaches 1.0.
 - Combining the evolved parts to form the final individual.
-- Returning the number of fitness function calls and whether the individual meets a specified criterion.
-
+- Returning the number of fitness function calls.
 
 ## Why it is a Local Search Algorithm
 
@@ -43,10 +43,19 @@ The algorithm exhibits characteristics that align with the principles of local s
 
 ### Relation to other Local Search Algorithms:
 
-Shares similarities with Hill Climbing:
+Shares similarities with Hill Climbing (basically HC for each subpart):
 
 - _Local Exploration:_ Both algorithms focus on local exploration, making incremental changes to the current solution.
 - _Memoryless:_ They do not maintain a memory of past solutions; decisions are based on the current state.
 - _Exploitation:_ The algorithms exploit local improvements in fitness.
 
+# lab9_bb - HC
 
+Fitness function is a black box.
+
+HC algorithm with different acceptance rate for neighbors based on problem instance.
+
+- Finds the best solution for the problem instance 1.
+- Averages 0.5 for problem instance 2, 5, 10.
+
+One fitness call per iteration.
