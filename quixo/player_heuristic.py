@@ -208,7 +208,7 @@ class MyPlayer(Player):
 
         def edge_control(board, player):
             # Count the number of edges controlled by the player
-            edges = [(0, 2), (2, 0), (2, 4), (4, 2)]
+            edges = [(0, 2), (2, 0), (2, 4), (4, 2)]  # 2 is center tile
             count = sum(1 for edge in edges if board[edge] == player)
             return count
 
