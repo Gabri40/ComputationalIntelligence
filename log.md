@@ -22,12 +22,8 @@ One type of agent with a simple heuristic function that evaluates the board and 
 
 It takes in consideration the occupation of lines, columns, edges, corners and center tiles control.
 
-> Random vs MyPlayer
-> MyPlayer wins: 1000
+> Random vs MyPlayer - MyPlayer wins: 1000
 >
-> MyPlayer vs Random
-> MyPlayer wins: 1000
+> MyPlayer vs Random - MyPlayer wins: 1000
 >
-> MyPlayer vs MyPlayer
-> MyPlayer as P1 wins: 1000
-> MyPlayer as P2 wins: 0
+> MyPlayer vs MyPlayer - MyPlayer as P1 wins: 1000 - MyPlayer as P2 wins: 0
