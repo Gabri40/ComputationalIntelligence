@@ -37,21 +37,31 @@ class Game(object):
 
     def check_winner(self) -> int:
         """Check the winner. Returns the player ID of the winner if any, otherwise returns -1"""
+        # for each row
         for x in range(self._board.shape[0]):
-            if all(self._board[x, :] == self._board[x, 0]):
+            # if a player has completed an entire row
+            if self._board[x, 0] != -1 and all(self._board[x, :] == self._board[x, 0]):
+                # return the relative id
                 return self._board[x, 0]
-        for y in range(self._board.shape[0]):
-            if all(self._board[:, y] == self._board[0, y]):
+        # for each column
+        for y in range(self._board.shape[1]):
+            # if a player has completed an entire column
+            if self._board[0, y] != -1 and all(self._board[:, y] == self._board[0, y]):
+                # return the relative id
                 return self._board[0, y]
-        if all(
+        # if a player has completed the principal diagonal
+        if self._board[0, 0] != -1 and all(
             [self._board[x, x] for x in range(self._board.shape[0])]
             == self._board[0, 0]
         ):
+            # return the relative id
             return self._board[0, 0]
-        if all(
-            [self._board[x, -x] for x in range(self._board.shape[0])]
-            == self._board[-1, -1]
+        # if a player has completed the secondary diagonal
+        if self._board[0, -1] != -1 and all(
+            [self._board[x, -(x + 1)] for x in range(self._board.shape[0])]
+            == self._board[0, -1]
         ):
+            # return the relative id
             return self._board[0, -1]
         return -1
 
@@ -64,12 +74,10 @@ class Game(object):
             current_player_idx += 1
             current_player_idx %= len(players)
             ok = False
-            # print(f"Player {current_player_idx}'s turn")
             while not ok:
                 from_pos, slide = players[current_player_idx].make_move(self)
                 ok = self.__move(from_pos, slide, current_player_idx)
             winner = self.check_winner()
-            # self.print()
         return winner
 
     def __move(self, from_pos: tuple[int, int], slide: Move, player_id: int) -> bool:
@@ -89,12 +97,16 @@ class Game(object):
         """Take piece"""
         # acceptable only if in border
         acceptable: bool = (
+            # check if it is in the first row
             (from_pos[0] == 0 and from_pos[1] < 5)
+            # check if it is in the last row
             or (from_pos[0] == 4 and from_pos[1] < 5)
+            # check if it is in the first column
             or (from_pos[1] == 0 and from_pos[0] < 5)
+            # check if it is in the last column
             or (from_pos[1] == 4 and from_pos[0] < 5)
-            and (self._board[from_pos] < 0 or self._board[from_pos] == player_id)
-        )
+            # and check if the piece can be moved by the current player
+        ) and (self._board[from_pos] < 0 or self._board[from_pos] == player_id)
         if acceptable:
             self._board[from_pos] = player_id
         return acceptable
@@ -112,7 +124,7 @@ class Game(object):
             acceptable_left: bool = from_pos[1] == 0 and (
                 slide == Move.BOTTOM or slide == Move.TOP or slide == Move.RIGHT
             )
-            acceptable_right: bool = from_pos[1] == 4 and (
+            acceptable_right: bool = from_pos[1] == 0 and (
                 slide == Move.BOTTOM or slide == Move.TOP or slide == Move.LEFT
             )
         else:
