@@ -1,17 +1,19 @@
 import random
 from game import Game, Move, Player
-from random_player import RandomPlayer
 from tqdm import tqdm
 import pickle
 from utils import get_all_possible_actions, get_random_possible_action
 
 
 class MyPlayer(Player):
-    def __init__(self, player_index=0) -> None:
+    def __init__(self, player_index=0, preload=True) -> None:
         super().__init__()
         self.index = player_index
         self.steps = {}
         self.last_actions = []
+
+        if preload:
+            self.load("quixo/myplayer.pickle")
 
     def print_steps(self):
         for key, value in self.steps.items():
@@ -89,6 +91,16 @@ class MyPlayer(Player):
     def load(self, filename: str) -> None:
         with open(filename, "rb") as f:
             self.steps = pickle.load(f)
+
+
+class RandomPlayer(Player):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def make_move(self, game: "Game") -> tuple[tuple[int, int], Move]:
+        from_pos = (random.randint(0, 4), random.randint(0, 4))
+        move = random.choice([Move.TOP, Move.BOTTOM, Move.LEFT, Move.RIGHT])
+        return from_pos, move
 
 
 if __name__ == "__main__":

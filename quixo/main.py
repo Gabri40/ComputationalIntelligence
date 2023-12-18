@@ -25,7 +25,7 @@ class RandomPlayer(Player):
 
 
 if __name__ == "__main__":
-    player1 = RandomPlayer()
+    player1 = MyPlayer(0, preload=True)
     player2 = RandomPlayer()
 
     g = Game()
