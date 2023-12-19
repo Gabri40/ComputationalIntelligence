@@ -5,15 +5,18 @@ import pickle
 from utils import get_all_possible_actions, get_random_possible_action
 
 
-class MyPlayer(Player):
-    def __init__(self, player_index=0, preload=True) -> None:
+class MyPlayer1(Player):
+    def __init__(
+        self, player_index=0, preload=True, random_action_probability=0.1
+    ) -> None:
         super().__init__()
         self.index = player_index
         self.steps = {}
         self.last_actions = []
+        self.random_action_probability = random_action_probability
 
         if preload:
-            self.load("quixo/myplayer.pickle")
+            self.load("quixo/myplayer1.pickle")
 
     def print_steps(self):
         for key, value in self.steps.items():
@@ -65,7 +68,8 @@ class MyPlayer(Player):
         if key_action not in self.steps[key_board]:
             self.steps[key_board][key_action] = 0
 
-        if key_board in self.steps and len(self.steps[key_board]) > 0:
+        # Exploration vs Exploitation trade-off
+        if random.random() > self.random_action_probability:
             possible_actions = self.steps[key_board]
             action = max(possible_actions, key=possible_actions.get)
             action = self.str_to_action(action)
@@ -104,20 +108,21 @@ class RandomPlayer(Player):
 
 
 if __name__ == "__main__":
-    player1 = MyPlayer(player_index=0)
+    player1 = MyPlayer1(player_index=0)
     player2 = RandomPlayer()
 
-    # player1.train(20000)
-    # player1.save("quixo/myplayer.pickle")
-    player1.load("quixo/myplayer.pickle")
+    # player1.train(100000)
+    # player1.save("quixo/myplayer1.pickle")
+    player1.load("quixo/myplayer1.pickle")
     # player1.print_steps()
 
     wins = 0
-    for _ in tqdm(range(100)):
+    games = 100
+    for _ in tqdm(range(games)):
         g = Game()
         winner = g.play(player1, player2)
         wins += 1 if winner == 0 else 0
-    print("Win rate:", wins / 100)
+    print("Win rate:", wins / games)
 
     # action = ((0, 0), Move.TOP)
     # print(action)

@@ -1,7 +1,7 @@
 import random
 from game import Game, Move, Player
 from tqdm import tqdm
-from myplayer import MyPlayer
+from myplayer import MyPlayer1
 
 
 class RandomPlayer(Player):
@@ -25,10 +25,16 @@ class RandomPlayer(Player):
 
 
 if __name__ == "__main__":
-    player1 = MyPlayer(0, preload=True)
+    player1 = MyPlayer1(0, preload=True)
     player2 = RandomPlayer()
 
     g = Game()
     winner = g.play(player1, player2)
-
     print(winner)
+
+    wins = 0
+    for _ in tqdm(range(100)):
+        g = Game()
+        winner = g.play(player1, player2)
+        wins += 1 if winner == 0 else 0
+    print("Win rate:", wins / 100)

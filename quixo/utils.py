@@ -5,7 +5,7 @@ import random
 def get_random_possible_action(
     game: "Game", player_index: int
 ) -> tuple[tuple[int, int], Move]:
-    """row,col , move"""
+    """random move from all the possible ones in the form :  row,col , move"""
     board = game._board
     row = None
     col = None
@@ -42,7 +42,7 @@ def get_random_possible_action(
 def get_all_possible_actions(
     game: "Game", player_index: int
 ) -> list[tuple[tuple[int, int], Move]]:
-    """list[row,col , move]"""
+    """return list of all the possible moves for the player in the form :  list[row,col , move]"""
     board = game._board
     actions = []
 
