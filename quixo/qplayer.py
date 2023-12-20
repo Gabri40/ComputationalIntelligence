@@ -205,6 +205,8 @@ if __name__ == "__main__":
 
 # SOME RESULTS
 
+# this thing is too big maybe deep QL
+
 
 # TRAINING FROM SCRATCH
 

@@ -83,8 +83,8 @@ class Game(object):
             while not ok:
                 from_pos, slide = players[current_player_idx].make_move(self)
                 ok = self.__move(from_pos, slide, current_player_idx)
-            # print(f"Player {current_player_idx} moved {from_pos,slide}")
-            # self.print()
+                # if current_player_idx == 0:
+                #     print(from_pos, slide, ok)
             winner = self.check_winner()
         return winner
 
