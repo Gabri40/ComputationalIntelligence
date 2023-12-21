@@ -1,5 +1,6 @@
 from game import Game, Move
 import random
+import numpy as np
 
 
 def get_random_possible_action(
@@ -82,3 +83,85 @@ def get_all_possible_actions(
             )
 
     return actions
+
+
+def try_move(
+    from_pos: tuple[int, int], slide: Move, game: "Game", player: int
+) -> (list[list[int]], bool):
+    """Try to move the piece"""
+    board = game.get_board()
+
+    # move passed should be from get_all_possible_actions
+    if (from_pos, slide) not in get_all_possible_actions(game, player):
+        return board, False
+
+    # invert from_pos cause wtf
+    from_pos = (from_pos[1], from_pos[0])
+
+    # take the piece -> change its value to the player's index
+    board[from_pos] = player
+    piece = board[from_pos]
+
+    # slide the board
+
+    if slide == Move.LEFT:
+        for i in range(from_pos[1], 0, -1):
+            board[(from_pos[0], i)] = board[(from_pos[0], i - 1)]
+        board[(from_pos[0], 0)] = piece
+
+    elif slide == Move.RIGHT:
+        for i in range(from_pos[1], board.shape[1] - 1, 1):
+            board[(from_pos[0], i)] = board[(from_pos[0], i + 1)]
+        board[(from_pos[0], board.shape[1] - 1)] = piece
+
+    elif slide == Move.TOP:
+        for i in range(from_pos[0], 0, -1):
+            board[(i, from_pos[1])] = board[(i - 1, from_pos[1])]
+        board[(0, from_pos[1])] = piece
+
+    elif slide == Move.BOTTOM:
+        for i in range(from_pos[0], board.shape[0] - 1, 1):
+            board[(i, from_pos[1])] = board[(i + 1, from_pos[1])]
+        board[(board.shape[0] - 1, from_pos[1])] = piece
+
+    return board, True
+
+
+def evaluate_board(board: list[list[int]]) -> int:
+    """Check the winner. Returns the player ID of the winner if any, otherwise returns -1"""
+    # for each row
+    for x in range(board.shape[0]):
+        # if a player has completed an entire row
+        if board[x, 0] != -1 and all(board[x, :] == board[x, 0]):
+            return board[x, 0]
+
+    # for each column
+    for y in range(board.shape[1]):
+        # if a player has completed an entire column
+        if board[0, y] != -1 and all(board[:, y] == board[0, y]):
+            return board[0, y]
+
+    # if a player has completed the principal diagonal
+    if board[0, 0] != -1 and all(
+        [board[x, x] for x in range(board.shape[0])] == board[0, 0]
+    ):
+        return board[0, 0]
+
+    # if a player has completed the secondary diagonal
+    if board[0, -1] != -1 and all(
+        [board[x, -(x + 1)] for x in range(board.shape[0])] == board[0, -1]
+    ):
+        return board[0, -1]
+    return -1
+
+
+if __name__ == "__main__":
+    game = Game()
+    # print(get_random_possible_action(game, 0))
+    # print(get_all_possible_actions(game, 0))
+    action = get_random_possible_action(game, 0)
+    game.print()
+    print(action)
+    boardcpy_after_trying_action = try_move(game, action[0], action[1], game, 0)
+    print(boardcpy_after_trying_action)
+    print(evaluate_board(game, 0))
