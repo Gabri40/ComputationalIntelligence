@@ -41,10 +41,9 @@ def get_random_possible_action(
 
 
 def get_all_possible_actions(
-    game: "Game", player_index: int
+    board: list[list[int]], player_index: int
 ) -> list[tuple[tuple[int, int], Move]]:
     """return list of all the possible moves for the player in the form :  list[row,col , move]"""
-    board = game._board
     actions = []
 
     # corners
@@ -86,13 +85,12 @@ def get_all_possible_actions(
 
 
 def try_move(
-    from_pos: tuple[int, int], slide: Move, game: "Game", player: int
+    from_pos: tuple[int, int], slide: Move, board: list[list[int]], player: int
 ) -> (list[list[int]], bool):
     """Try to move the piece"""
-    board = game.get_board()
 
     # move passed should be from get_all_possible_actions
-    if (from_pos, slide) not in get_all_possible_actions(game, player):
+    if (from_pos, slide) not in get_all_possible_actions(board, player):
         return board, False
 
     # invert from_pos cause wtf
@@ -127,7 +125,7 @@ def try_move(
     return board, True
 
 
-def evaluate_board(board: list[list[int]]) -> int:
+def evaluate_winner(board: list[list[int]]) -> int:
     """Check the winner. Returns the player ID of the winner if any, otherwise returns -1"""
     # for each row
     for x in range(board.shape[0]):
@@ -164,4 +162,4 @@ if __name__ == "__main__":
     print(action)
     boardcpy_after_trying_action = try_move(game, action[0], action[1], game, 0)
     print(boardcpy_after_trying_action)
-    print(evaluate_board(game, 0))
+    # print(evaluate_board(game, 0))
