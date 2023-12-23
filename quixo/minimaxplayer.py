@@ -145,4 +145,4 @@ if __name__ == "__main__":
     print(wins / games)
 
 
-# seems to be good enought at around 55% winrate it doesnt improve much after that
+# seems to be good enought at around 55% winrate with depth 5 and the selected evaluations
