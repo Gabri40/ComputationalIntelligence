@@ -51,6 +51,21 @@ if __name__ == "__main__":
 # lligence/quixo/main.py
 # 100%|█████████████████| 1000/1000 [00:04<00:00, 220.79it/s]
 # 100%|█████████████████| 1000/1000 [00:04<00:00, 228.79it/s]
-
 # DQNPlayer as P1 - Win rate over 1000 games: 0.838
 # DQNPlayer as P2 -  Win rate over 1000 games: 0.797
+
+# /Users/gabriquaranta/repos/computational-intelligence/.env
+# CI/bin/python /Users/gabriquaranta/repos/computational-inte
+# lligence/quixo/main.py
+# 100%|█████████████████| 1000/1000 [00:03<00:00, 254.74it/s]
+# 100%|█████████████████| 1000/1000 [00:03<00:00, 266.06it/s]
+# DQNPlayer as P1 - Win rate over 1000 games: 0.836
+# DQNPlayer as P2 -  Win rate over 1000 games: 0.804
+
+# /Users/gabriquaranta/repos/computational-intelligence/.env
+# CI/bin/python /Users/gabriquaranta/repos/computational-inte
+# lligence/quixo/main.py
+# 100%|█████████████████| 1000/1000 [00:03<00:00, 271.47it/s]
+# 100%|█████████████████| 1000/1000 [00:03<00:00, 277.06it/s]
+# DQNPlayer as P1 - Win rate over 1000 games: 0.852
+# DQNPlayer as P2 -  Win rate over 1000 games: 0.806
