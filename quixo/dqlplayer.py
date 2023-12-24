@@ -1,4 +1,4 @@
-from utils import *
+import utils
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -20,250 +20,186 @@ class RandomPlayer(Player):
         return from_pos, move
 
 
-# =================================================================================================
+def board_to_neutral_flatten_board(board: list[list[int]], p_index=int) -> list[int]:
+    """Converts a board to a neutral flatten board where current player is 1, opponent is -1 and empty is 0"""
+    opponent = 1 - p_index
+    return [
+        1 if x == p_index else -1 if x == opponent else 0 for row in board for x in row
+    ]
 
 
-CELLS_TAKEABILITY_MATRIX = [
-    [1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1],
-]
-
-FLATTENED_CELLS_TAKEABILITY_MATRIX = [
-    x for row in CELLS_TAKEABILITY_MATRIX for x in row
-]
+def action_to_triplet(action: tuple[int, int, int]) -> tuple[int, int, int]:
+    """Converts an action to a tuple of int"""
+    return (action[0][0], action[0][1], action[1].value)
 
 
-# =================================================================================================
+def triplet_to_action(triplet: tuple[int, int, int]) -> tuple[tuple[int, int], Move]:
+    """Converts a tuple of int to an action"""
+    return ((triplet[0], triplet[1]), Move(triplet[2]))
 
 
-def board_to_neutral_board(board: list[list[int]]) -> list[list[int]]:
-    return [[-1 if x == 1 else 1 if x == 0 else 0 for x in row] for row in board]
+def all_possible_actions_to_list_triplets(
+    game: "Game", p_index
+) -> list[tuple[int, int, int]]:
+    """Converts a list of possible actions for the current to a list of tuple of int"""
+    actions = utils.get_all_possible_actions(game.get_board(), p_index)
+    return [(action[0][0], action[0][1], action[1].value) for action in actions]
 
 
-def invert_neutral_board(board: list[list[int]]) -> list[list[int]]:
-    return [[-x for x in row] for row in board]
+def is_action_possible(
+    game: "Game", p_index: int, action: tuple[int, int, int]
+) -> bool:
+    """Check if an action is possible"""
+    actions = all_possible_actions_to_list_triplets(game, p_index)
+    return action in actions
 
 
-def flatten_board(board: list[list[int]]) -> list[int]:
-    return [x for row in board for x in row]
+def only_possible_actions(
+    game: "Game", p_index: int, actions: list[tuple[int, int, int]]
+) -> list[tuple[int, int, int]]:
+    """Return only the possible actions from a list of actions"""
+    possible_actions = all_possible_actions_to_list_triplets(game, p_index)
+    return [action for action in actions if action in possible_actions]
 
 
-def board_to_board_string(board: list[list[int]]) -> str:
-    return "".join([str(x) for row in board for x in row])
+def reward_to_neutral_reward(reward: int, p_index: int) -> int:
+    """Converts a reward to a neutral reward where current player is 1, opponent is -1 else 0"""
+    if reward == p_index:
+        return 1
+    elif reward == 1 - p_index:
+        return -1
+    else:
+        return 0
 
 
-def board_string_to_board(state: str) -> list[list[int]]:
-    return [[int(state[i * 5 + j]) for j in range(5)] for i in range(5)]
-
-
-def action_to_action_string(action: tuple[tuple[int, int], Move]) -> str:
-    return f"{action[0][0]}{action[0][1]}{action[1].value}"
-
-
-def action_string_to_action(action_string: str) -> tuple[tuple[int, int], Move]:
-    return ((int(action_string[0]), int(action_string[1])), Move(int(action_string[2])))
-
-
-# =================================================================================================
-
-Experience = namedtuple(
-    "Experience", ("player", "state", "action", "next_state", "reward")
-)
+Experience = namedtuple("Experience", ("state", "action", "next_state", "reward"))
 
 
 class ReplayBuffer:
-    def __init__(self, capacity: int = 10000) -> None:
-        self.capacity = capacity
+    def __init__(self, capacity: int = 10_000) -> None:
         self.buffer = deque(maxlen=capacity)
-        self.position = 0
 
-    def add(self, experience: Experience) -> None:
+    def push(self, experience: Experience) -> None:
         self.buffer.append(experience)
 
     def sample(self, batch_size: int) -> list[Experience]:
         return random.sample(self.buffer, batch_size)
 
+    def __len__(self) -> int:
+        return len(self.buffer)
 
-# =================================================================================================
+
+class MemoryRandomPlayer(Player):
+    def __init__(self, p_index) -> None:
+        super().__init__()
+        self.p_index = p_index
+        self.mem = []
+
+    def get_memories(self) -> list[Experience]:
+        return self.mem
+
+    def make_move(self, game: "Game") -> tuple[tuple[int, int], Move]:
+        from_pos, move = utils.get_random_possible_action(game, self.p_index)
+
+        # experience
+        state = board_to_neutral_flatten_board(game.get_board(), self.p_index)
+        action = action_to_triplet((from_pos, move))
+        tried_board = utils.try_move((from_pos, move), game.get_board(), self.p_index)
+        evaluated_tried_board = utils.evaluate_winner(tried_board)
+        next_state = board_to_neutral_flatten_board(tried_board, self.p_index)
+        # reward = reward_to_neutral_reward(evaluated_tried_board, self.p_index)
+
+        self.mem.append(Experience(state, action, next_state, None))
+
+        return (from_pos[1], from_pos[0]), move  # GOD WHY
 
 
 class DQN(nn.Module):
-    def __init__(self, input_size=26, output_size=100):
+    def __init__(self, input_dim: int, output_dim: int) -> None:
         super().__init__()
-        self.fc1 = nn.Linear(input_size, 128)
+        self.fc1 = nn.Linear(input_dim, 128)
         self.fc2 = nn.Linear(128, 128)
-        self.fc3 = nn.Linear(128, output_size)
+        self.fc3 = nn.Linear(128, output_dim)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
         return self.fc3(x)
 
-    def interpret_output(self, q_values):
-        # Reshape output to reflect the board structure and possible actions
-        return q_values.view((5, 5, 4))
 
-    def map_indices_to_actions(self, action_indices):
-        actions = []
-        for i in range(5):
-            for j in range(5):
-                cell_action = action_indices[i, j].item()
-                if cell_action == Move.RIGHT.value:
-                    actions.append(((i, j), Move.RIGHT))
-                elif cell_action == Move.LEFT.value:
-                    actions.append(((i, j), Move.LEFT))
-                elif cell_action == Move.BOTTOM.value:
-                    actions.append(((i, j), Move.BOTTOM))
-                elif cell_action == Move.TOP.value:
-                    actions.append(((i, j), Move.TOP))
-        return actions
-
-    def select_single_action(self, q_values):
-        # Select the action with the highest Q-value for the entire move
-        selected_action_index = np.unravel_index(
-            np.argmax(q_values.numpy()), q_values.shape
-        )
-        selected_action = (
-            (selected_action_index[0], selected_action_index[1]),
-            Move(selected_action_index[2]),
-        )
-        return selected_action
-
-    def save_weights(self, file_path="quixo/dql_weights.pt"):
-        torch.save(self.state_dict(), file_path)
-        print(f"Model weights saved to {file_path}")
-
-    def load_weights(self, file_path="quixo/dql_weights.pt"):
-        self.load_state_dict(torch.load(file_path))
-        print(f"Model weights loaded from {file_path}")
-
-
-# =================================================================================================
-class DQNPlayer(Player):
-    def __init__(self, dqn: DQN, target_dqn: DQN, player_index) -> None:
+class DQLPlayer(Player):
+    def __init__(self, p_index) -> None:
         super().__init__()
-        self.dqn = dqn
-        self.target_dqn = target_dqn
-        self.replay_buffer = ReplayBuffer()
-        self.game_memory = []
-        self.optimizer = optim.Adam(self.dqn.parameters(), lr=0.001)
-        self.player_index = player_index
+        self.p_index = p_index
+        self.model = DQN(25, 4 * 5 * 5)
+        # 25 * 4actions, needs a mask
+        # should return 4 5x5 matrices each matrix is q values for each move
 
-    def train(self, num_games: int, gamma: float):
-        for i in tqdm(range(num_games)):
-            game = Game()
-            self.game_memory = []
+    def get_memories(self) -> list[Experience]:
+        return self.replay_buffer.buffer
 
-            winner = game.play(self, RandomPlayer())
+    def get_model_output(self, game) -> torch.Tensor:
+        state = board_to_neutral_flatten_board(game.get_board(), self.p_index)
+        return self.model(torch.tensor(state, dtype=torch.float32))
 
-            # outcome
-            reward = (
-                1
-                if self.player_index == winner
-                else 0
-                if winner == 1 - self.player_index
-                else 0.5  # draw
-            )
+    def model_output_view(self, game) -> torch.Tensor:
+        return self.get_model_output(game).view(4, 5, 5)
 
-            # single reward update for all moves taken in single game and adds to reply buffer
-            for exp in self.game_memory:
-                exp.reward = reward if exp.player == self.player_index else -reward
-                # self.replay_buffer.add(exp)
+    def mask_model_output(self, game: "Game") -> torch.Tensor:
+        """Mask the model output to only possible actions"""
+        model_output = self.get_model_output(game)
+        model_output = model_output.view(4, 5, 5)
 
-            # add to replay buffer with format compatible with nn input
-            for exp in self.game_memory:
-                board = flatten_board(exp.state)
-                next_board = flatten_board(exp.next_state)
-                self.replay_buffer.add(
-                    Experience(
-                        exp.player,
-                        board,
-                        exp.action,
-                        next_board,
-                        exp.reward,
-                    )
-                )
+        possible_actions = all_possible_actions_to_list_triplets(game, self.p_index)
+        possible_actions_to_model_output_mask = torch.zeros(4, 5, 5)
 
-            # perform nn update for whole game
-            batch = self.replay_buffer.sample(32)
-            (
-                batch_players,
-                batch_states,
-                batch_actions,
-                batch_next_state,
-                batch_rewards,
-            ) = zip(*batch)
+        for action in possible_actions:
+            possible_actions_to_model_output_mask[action[2], action[0], action[1]] = 1
 
-            batch_states = torch.tensor(batch_states, dtype=torch.float32)
+        return model_output * possible_actions_to_model_output_mask
 
-            q_values = self.dqn(batch_states)
+    def get_max_q_action(self, game: "Game") -> tuple[int, int, int]:
+        """Returns indexes of the action with the highest q value"""
+        masked_model_output = self.mask_model_output(game)
+        # masked 4 * [5 * 5] matrix
 
-        return
+        # Find the index of the maximum value across all matrices
+        flat_index = torch.argmax(masked_model_output.view(-1))
+
+        # Calculate matrix, row, and column indices directly
+        matrix_index = flat_index // (
+            masked_model_output.shape[1] * masked_model_output.shape[2]
+        )
+        row_index = (
+            flat_index % (masked_model_output.shape[1] * masked_model_output.shape[2])
+        ) // masked_model_output.shape[2]
+        col_index = (
+            flat_index % (masked_model_output.shape[1] * masked_model_output.shape[2])
+        ) % masked_model_output.shape[2]
+
+        return (row_index.item(), col_index.item(), matrix_index.item())
+
+    def action_to_move(
+        self, action: tuple[int, int, int]
+    ) -> tuple[tuple[int, int], Move]:
+        """Converts an action triplet to a move"""
+        return ((action[0], action[1]), Move(action[2]))
 
     def make_move(self, game: "Game") -> tuple[tuple[int, int], Move]:
-        # Get the current state of the board
-        board = game.get_board()
-        nn_input = flatten_board(board).append(self.player_index)
-
-        # eps greedy
-        if random.random() < 0.1:
-            action = get_random_possible_action(game)
+        if random.random() < 0:
+            action = utils.get_random_possible_action(game, self.p_index)
         else:
-            # Get the Q-values for the current state
-            q_values = self.dqn(nn_input)
+            action = self.get_max_q_action(game)
+            action = self.action_to_move(action)
 
-            # Interpret the Q-values
-            q_values = self.dqn.interpret_output(q_values)
-
-            # Get the possible actions for the current state
-            possible_actions = game.get_possible_actions()
-
-            # Filter the Q-values to only include the possible actions
-            q_values = q_values * torch.tensor(
-                flatten_board(possible_actions), dtype=torch.float32
-            )
-
-            # Select the action with the highest Q-value
-            action = self.dqn.select_single_action(q_values)
-
-        # next board
-        next_board = try_move(action[0], action[1], board, self.player_index)
-        next_board_eval = evaluate_winner(next_board)
-        next_board_eval = (
-            1
-            if self.player_index == next_board_eval
-            else -1
-            if next_board_eval == 1 - self.player_index
-            else 0.5
-        )
-
-        exp = Experience(self.player_index, board, action, next_board, None)
-
-        self.game_memory.append(exp)
-
-        return (action[0][1], action[0][1]), action[1]
+        action = (action[0][1], action[0][0]), action[1]  # GOD WHY
+        print(action)
+        return action
 
 
-# =================================================================================================
-# TRAINING
-# =================================================================================================
-
-# inputs
-# baord flattened + one element for player -> 26
-
-# outputs
-# q values for each action -> 5*5*4
-
-# model
-dqn = DQN(26, 100)
-target_dqn = DQN(26, 100)
-
-# training
-dqn_player = DQNPlayer(dqn, target_dqn, 0)
-dqn_player.train(100, 0.9)
-
-# save weights
-dqn_player.dqn.save_weights()
+if __name__ == "__main__":
+    game = Game()
+    p1 = DQLPlayer(0)
+    p2 = RandomPlayer()
+    res = game.play(p1, p2)
+    print(res)

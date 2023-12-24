@@ -7,7 +7,7 @@ def get_random_possible_action(
     game: "Game", player_index: int
 ) -> tuple[tuple[int, int], Move]:
     """random move from all the possible ones in the form :  row,col , move"""
-    board = game._board
+    board = game.get_board()
     row = None
     col = None
     move = None
@@ -85,13 +85,16 @@ def get_all_possible_actions(
 
 
 def try_move(
-    from_pos: tuple[int, int], slide: Move, board: list[list[int]], player: int
+    action: tuple[tuple[int, int], Move], board: list[list[int]], player: int
 ) -> (list[list[int]], bool):
     """Try to move the piece"""
 
+    # unpack the action
+    from_pos, slide = action
+
     # move passed should be from get_all_possible_actions
     if (from_pos, slide) not in get_all_possible_actions(board, player):
-        return board, False
+        return None
 
     # invert from_pos cause wtf
     from_pos = (from_pos[1], from_pos[0])
@@ -122,7 +125,7 @@ def try_move(
             board[(i, from_pos[1])] = board[(i + 1, from_pos[1])]
         board[(board.shape[0] - 1, from_pos[1])] = piece
 
-    return board, True
+    return board
 
 
 def evaluate_winner(board: list[list[int]]) -> int:
