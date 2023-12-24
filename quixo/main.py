@@ -1,7 +1,7 @@
 import random
 from game import Game, Move, Player
 from tqdm import tqdm
-from myplayer import MyPlayer1
+from dqlplayer import DQLPlayer
 
 
 class RandomPlayer(Player):
@@ -25,16 +25,32 @@ class RandomPlayer(Player):
 
 
 if __name__ == "__main__":
-    player1 = MyPlayer1(0, preload=True)
+    games = 1000
+    player1 = DQLPlayer(0, preload=True)
     player2 = RandomPlayer()
-
-    g = Game()
-    winner = g.play(player1, player2)
-    print(winner)
-
-    wins = 0
-    for _ in tqdm(range(100)):
+    wins1 = 0
+    for _ in tqdm(range(games)):
         g = Game()
         winner = g.play(player1, player2)
-        wins += 1 if winner == 0 else 0
-    print("Win rate:", wins / 100)
+        wins1 += 1 if winner == 0 else 0
+
+    player1 = RandomPlayer()
+    player2 = DQLPlayer(1, preload=True)
+    wins2 = 0
+    for _ in tqdm(range(games)):
+        g = Game()
+        winner = g.play(player1, player2)
+        wins2 += 1 if winner == 1 else 0
+
+    print(f"\nDQNPlayer as P1 - Win rate over {games} games: {wins1 / games}")
+    print(f"DQNPlayer as P2 -  Win rate over {games} games: {wins2 / games}")
+
+
+# /Users/gabriquaranta/repos/computational-intelligence/.env
+# CI/bin/python /Users/gabriquaranta/repos/computational-inte
+# lligence/quixo/main.py
+# 100%|█████████████████| 1000/1000 [00:04<00:00, 220.79it/s]
+# 100%|█████████████████| 1000/1000 [00:04<00:00, 228.79it/s]
+
+# DQNPlayer as P1 - Win rate over 1000 games: 0.838
+# DQNPlayer as P2 -  Win rate over 1000 games: 0.797

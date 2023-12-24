@@ -86,7 +86,7 @@ def get_all_possible_actions(
 
 def try_move(
     action: tuple[tuple[int, int], Move], board: list[list[int]], player: int
-) -> (list[list[int]], bool):
+) -> list[list[int]]:
     """Try to move the piece"""
 
     # unpack the action
