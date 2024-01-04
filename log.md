@@ -1,8 +1,905 @@
-# Computational Intelligence Log
+# s318944 Gabriele Quaranta - Computational Intelligence Activity Log
 
-commits will be added later since already tracked by git
+## Set Covering
 
-# LAB2 - Nim Peer Reviews - 24/11/2023
+### Path Search Studies
+
+The files are in the `set-covering-path-search` folder. I tried to implement all the techniques learned.
+
+For basic path search the results are in the `set_covering_path_search_stats.ipynb` file where i tried to implement it with different type of queues to evaluate and learn the difference between them. The main code is the following:
+
+```python
+def solve(queuetype, steps, sets):
+    """
+    Solve the Set Covering problem using different queuing strategies.
+
+    Args:
+        queuetype (str): The type of queue to use. Supported values are 'priority', 'simple', or 'lifo'.
+        steps (list): A list to store the number of iterations required to solve the problem.
+        sets (tuple): A collection of subsets for the Set Covering problem.
+
+    Returns:
+        None: The function updates the 'steps' list with the number of iterations needed.
+    """
+    # Initialize the queue based on 'queuetype'
+    if queuetype == "priority":
+        frontier = PriorityQueue()
+    elif queuetype == "simple":
+        frontier = SimpleQueue()
+    elif queuetype == "lifo":
+        frontier = LifoQueue()
+
+    # Create the initial state representing an empty set of selected subsets
+    initial_state = State(set(), set(range(NUMBER_SET)))
+    frontier.put(initial_state)
+
+    counter = 0
+    while not frontier.empty():
+        counter += 1
+
+        # Get the current state from the queue
+        current_state = frontier.get()
+
+        # Check if the current state is a solution
+        if goal_check(current_state, sets):
+            steps.append(counter)
+            return
+
+        # Generate successor states by taking actions (adding subsets)
+        for action in current_state.not_taken:
+            new_state = State(
+                current_state.taken ^ {action}, current_state.not_taken ^ {action}
+            )
+            frontier.put(new_state)
+
+    # Update the steps list
+    steps.append(counter)
+
+    counter = 0
+```
+
+I the plotted the result for three queuing strategies evaluating the average number of steps for 1000 runs on a problem with 10 subsets and 5 elements:
+
+- Priority Queue
+- Simple Queue
+- LIFO Queue
+
+With the Following results:
+![Alt text](image.png)
+
+### A\* Search
+
+In the same folder in the files `sc_ps_Astar.ipynb` and `sc_ps_Astar_stats` i implemented A\* search for the set covering problem. The learing of the topic is in the first file while different tests for the algorithm on differenft problem sizes are in the second. The main code is the following:
+
+```python
+def cost(state):
+    """The cost function calculates the cost of reaching a particular state"""
+    return len(state.taken)
+
+
+def heuristic(state, sets):
+    """Calculate the number of uncovered elements in U"""
+    uncovered = np.logical_not(
+        reduce(np.logical_or, [sets[i] for i in state.taken], np.zeros(PROBLEM_SIZE))
+    )
+    remaining_elements = np.sum(uncovered)
+    return remaining_elements
+
+
+def astar(sets,steps):
+    # Initialize the priority queue with the initial state
+    initial_state = State(
+        taken=[],
+        cost=0,
+        heuristic=heuristic(State(taken=[], cost=0, heuristic=0), sets),
+    )
+    open_set = PriorityQueue()
+    open_set.put((initial_state.cost + initial_state.heuristic, initial_state))
+
+    # Initialize the closed set as an empty set
+    closed_set = set()
+
+    checked_states = 0
+
+    while not open_set.empty():
+        # Get the state with the lowest f score from the priority queue
+        _, current_state = open_set.get()
+        checked_states += 1
+
+        # If the current state is a goal state, return the solution
+        if goal_check(current_state, sets):
+            steps.append(checked_states)
+            return current_state.taken
+
+
+        # Add the current state to the closed set
+        closed_set.add(tuple(current_state.taken))
+
+        # Generate successor states by adding one more subset
+        for subset in range(NUMBER_SET):
+            if subset not in current_state.taken:
+                # Create a new state by adding the subset
+                new_taken = current_state.taken + [subset]
+                new_cost = cost(State(new_taken, 0, 0))
+                new_heuristic = heuristic(State(new_taken, 0, 0), sets)
+                new_state = State(new_taken, new_cost, new_heuristic)
+
+                # If the state is not in the closed set, add it to the open set
+                if tuple(new_taken) not in closed_set:
+                    open_set.put((new_state.cost + new_state.heuristic, new_state))
+
+    # If the open set is empty and no solution is found, return None
+    return None
+```
+
+And the results:
+
+    Problem Size: 5
+    Number of sets: 10
+    Solvable runs: 88/100
+    Average number of checked states: 3.45
+
+    Problem Size: 20
+    Number of sets: 80
+    Solvable runs: 100/100
+    Average number of checked states:  4.26
+
+    Problem Size: 100
+    Number of sets: 1000
+    Solvable runs: 100/100
+    Average number of checked states:  5.99
+
+### Single State Methods
+
+In the folder `set-covering-ss` i implemented two single state methond to solve the same hill clambing problem as before, Hill Climbing and Simulated annealing.
+
+The problem definition is the same as for path search, the code i develod is the following:
+
+**Helper functins and Heuristics**
+
+```python
+  def covered(taken):
+      return np.sum(
+          reduce(np.logical_or, [SETS[i] for i in taken], np.zeros(PROBLEM_SIZE))
+      )
+
+
+  def overlap(taken):
+      # spots that are coveredby just one set in take list
+
+      matrix = np.stack([SETS[i] for i in taken], axis=-1)
+
+      return np.sum(np.sum(matrix, axis=1) > 1)
+
+
+  # heuristic functions
+  def h1(taken): # -> ended up using only h1
+      # number of spots covered by the union of the sets in state.taken
+      return covered(taken)
+
+
+  def h2(taken):
+      # number of spots covered / number of overlapping spots
+      c = covered(taken)
+      o = overlap(taken)
+      return c / o if o else c
+
+  # successor function
+  def successor(state):
+    return [
+        State(state.taken + [i], state.cost + 1, h1(state.taken + [i]))
+        for i in range(NUMBER_SET)
+        if i not in state.taken
+    ]
+```
+
+**Hill Climbing**
+
+```python
+def hill_climbing(init_state):
+    current = init_state
+    pb = tqdm()
+    while True:
+        neighbors = successor(current)
+        next = max(neighbors, key=lambda state: state.heuristic)
+
+        pb.update(1)
+        if (
+            goal_check(current)
+            or next.heuristic < current.heuristic
+            or len(current.taken) == NUMBER_SET
+        ):
+            return current
+
+        current = next
+```
+
+With the following results:
+
+```
+PROBLEM_SIZE = 500  # dimension of the finite set U
+NUMBER_SET = 1000  # number of subsets in the collection S
+Found   : State(taken=[177, 810, 477, 442, 615, 142, 95, 185, 0], cost=9, heuristic=500)
+Is sol  : True
+Overlap : 439
+```
+
+**Simulated Annealing**
+
+```python
+def simulated_annealing(init_state):
+    TEMP = 20
+
+    current = init_state
+    pb = tqdm()
+    while True:
+        pb.update(1)
+        if goal_check(current) or len(current.taken) == NUMBER_SET:
+            return current
+
+        neighbors = successor(current)
+        next = neighbors[np.random.randint(len(neighbors))]
+
+        deltaE = next.heuristic - current.heuristic
+
+        if deltaE > 0:
+            current = next
+```
+
+With the following results:
+
+```
+PROBLEM_SIZE = 500  # dimension of the finite set U
+NUMBER_SET = 1000  # number of subsets in the collection S
+Found   : State(taken=[223, 53, 303, 384, 867, 167, 88, 753, 239, 944, 764, 192, 435, 128, 570, 78], cost=16, heuristic=500)
+Is sol  : True
+Overlap : 488
+```
+
+## Evolutionary Algorithms
+
+In the folder `evolutionary-algorithms` i tried to learn the basics of evolutionary algorithms by solving different problems, after writing a short theory note `ES.md`.
+
+The list of problems was given by chatGPT asking for an increament in difficulty each time and is the following:
+
+- One Max
+- KnapSack
+- TSP
+- Multy-Objective KnapSack
+
+In all of them i tried to implement and learn the basics of the algorithms while trying different heuristics for the population as well as different types of ES.
+
+# LABS
+
+## Lab1 - Set Covering A\*
+
+The folder `lab1-set-covering-a-star` contains the implementation of A\* for the set covering problem.
+
+The problem definition is the same as for path search, here i tried to implement various heuristic for the algorithm and compare them. The A\* algorithm is a standard implementation using a heap queue for the frontier and a set for the closed set.
+
+The diffent heuristics i tried are the following:
+
+```python
+def TRIVIAL_heuristic(state, sets):
+    return 0
+
+
+def MRSC_heuristic(state, sets):
+    """
+    Minimum Remaining Set Coverage
+
+    This heuristic estimates the cost based on how many elements in "U" are still
+    uncovered and divides it by the number of subsets not taken. This heuristic
+    assumes that the subsets have an equal chance of covering remaining uncovered
+    elements.
+
+    h(state) = (number of uncovered elements in U) / (number of subsets not taken)
+    """
+
+    uncovered = reduce(
+        np.logical_or, [sets[i] for i in state.taken], np.zeros(len(sets[0]))
+    )
+
+    not_taken_subsets = NUMBER_SET - len(state.taken)
+
+    return -np.sum(uncovered) / not_taken_subsets
+
+
+def MSC_heuristic(state, sets):
+    """
+    Maximum Subset Coverage
+
+    This heuristic estimates the cost by assuming that each additional subset chosen
+    will cover as many uncovered elements as possible. It divides the number of
+    uncovered elements in "U" by the number of subsets already taken.
+
+    h(state) = (number of uncovered elements in U) / (number of subsets already taken)
+    """
+
+    uncovered = reduce(
+        np.logical_or, [sets[i] for i in state.taken], np.zeros(len(sets[0]))
+    )
+
+    return (-np.sum(uncovered) / len(state.taken)) if len(state.taken) > 0 else 0
+
+
+def MRSC_MSC_heuristic(state, sets):
+    return (MRSC_heuristic(state, sets) + MSC_heuristic(state, sets)) / 2
+
+
+def ASC_heuristic(state, sets):
+    """
+    Average Subset Coverage
+
+    This heuristic estimates the cost based on the average size of the remaining
+    subsets and assumes that each chosen subset will, on average, cover this many
+    elements.
+
+    h(state) = (number of uncovered elements in U) / (average size of remaining subsets)
+    """
+
+    uncovered = reduce(
+        np.logical_or, [sets[i] for i in state.taken], np.zeros(len(sets[0]))
+    )
+
+    remaining_sets = [sets[i] for i in range(NUMBER_SET) if i not in state.taken]
+
+    average_size = np.sum([np.sum(s) for s in remaining_sets]) / len(remaining_sets)
+
+    return -np.sum(uncovered) / average_size
+
+
+def RANDOM_heuristic(state, sets):
+    """
+    !! not admissible but funny !!
+    """
+    return random()
+
+
+def DENSITY_heuristic(state, sets):
+    """
+    Density Heuristic
+
+    This heuristic estimates the cost based on the density of uncovered elements in
+    U. It assumes that the subsets have an equal chance of covering remaining
+    uncovered elements.
+
+    h(state) = (density of uncovered elements in U) * (number of subsets)
+    """
+
+    uncovered = reduce(
+        np.logical_or, [sets[i] for i in state.taken], np.zeros(len(sets[0]))
+    )
+
+    # Calculate the density of uncovered elements in U
+    uncovered_density = np.sum(uncovered) / len(uncovered)
+
+    # Estimate the remaining cost based on the uncovered density
+    return -uncovered_density * NUMBER_SET
+```
+
+For a problem size of 20 and a number of sets of 40 the results are the following:
+
+```
+TRIVIAL_heuristic
+476it [00:00, 2138.69it/s]3613it [00:01, 2099.28it/s]
+ Solution: [1, 14, 37]
+ Solution cost: 3
+ Solution check: True
+
+MRSC_heuristic
+1602it [00:01, 1069.61it/s]
+ Solution: [1, 14, 37]
+ Solution cost: 3
+ Solution check: True
+
+MSC_heuristic
+328it [00:00, 1024.68it/s]
+ Solution: [1, 14, 37]
+ Solution cost: 3
+ Solution check: True
+
+MRSC_MSC_heuristic
+902it [00:01, 797.65it/s]
+ Solution: [1, 14, 37]
+ Solution cost: 3
+ Solution check: True
+
+ASC_heuristic
+18it [00:00, 117.11it/s]
+ Solution: [14, 1, 37]
+ Solution cost: 3
+ Solution check: True
+
+DENSITY_heuristic
+5it [00:00, 706.61it/s]
+ Solution: [12, 14, 1, 0]
+ Solution cost: 4
+ Solution check: True
+
+RANDOM_heuristic
+5169it [00:02, 2530.52it/s]
+ Solution: [14, 33, 37]
+ Solution cost: 3
+ Solution check: True
+```
+
+While almost all get to the optimal solution or very close to one there is a big difference in the amount of iterations needed to get there:
+
+- The by far best heuristic is the `ASC_heuristic` with only 18 iterations before finding the best solution.
+- The `DENSITY_heuristic` finds a solution in just 5 iterations but it is not the optimal one.
+
+## LAB2 - Nim ES
+
+The task involves creating agents to play Nim, a subtraction game where the goal is to avoid taking the last object. The game can have an arbitrary number of rows and a limit on the number of objects that can be removed in a turn.
+
+The code of the lab provided already some functions to choose a move using different strategies (`pure_random`,`gabriele`,`optimal`) as well as a function `adaptive` to use in the agent.
+
+The way i decided to implement the agent is the following:
+
+1. The `adaptive` function uses and updates the parameter `love_small` to choose the lowest row with the lowest number of objects.
+
+   ```python
+   def adaptive1(state: Nim) -> Nimply:
+       """A strategy that can adapt its parameters"""
+       genome = {"love_small": 0.5}  # set initial value for love_small
+
+       if state.rows[0] <= 3:  # if lowest row has 3 or less objects
+           genome["love_small"] = 0.9  # increase love_small
+       elif state.rows[0] >= 7:  # if lowest row has 7 or more objects
+           genome["love_small"] = 0.1  # decrease love_small
+
+       row = min(
+           range(len(state.rows)), key=lambda r: state.rows[r]
+       )  # select row with lowest number of objects
+
+       num_objects = int(
+           genome["love_small"] * state.rows[row]
+       )  # select number of objects to be removed from row
+
+       return Nimply(
+           row, num_objects
+       )  # return Nimply object for that row with updated number of objects
+   ```
+
+2. The agent is evolved using a ES algorithm with strategy **(1/3, 1)**:
+
+   - Parent Selection (μ): The top 1/3 of the population is selected as parents for the subsequent generation.
+   - Reproduction (ρ): It generates one offspring (either by mutation or recombination) per selected parent. This corresponds to the "1" in the (μ/ρ, λ) notation.
+   - Population Update: The algorithm creates a new population by either mutating a randomly selected parent with a certain probability or generating an offspring through reproduction (mating) between randomly chosen parents.
+
+3. The agent is definined in the following way:
+
+   - The longest Nim Game is If every player takes exactly one match each turn, so we have a maximum amount of moves an agent can make.
+   - There are 4 strategies to choose a move (the ones above) at each turn.
+   - So we can initialize aa population where each agent's genome is a list of strategies to use consecutively chosen at random with a weight for each strategy (lower for the optimal one so we dont get just a optimal agent).
+
+   ```python
+   def generate_random_agent_2():
+        # with small change to perform an optimal move
+        return [
+            random.choices(STRATEGIES, weights=[4, 4, 4, 1])[0]
+            for _ in range(MAX_NUMBER_MOVES)
+        ]
+   ```
+
+4. The population is evolved using either mutation or crossover for the new offsprings for 200 generations, with a starting population size of 20 and a mutation rate of 0.01, using a fitness function that evaluates the agent against a expert agent for 15 games.
+
+   ```python
+   def fitness2(agent):
+       # plays against expert by exectuing in order the moves of the agent and the expert agent
+       # fitness is number of matches won by agent with max 10 matches
+       results = [nim_match(agent) for _ in range(FITNESS_MATCHES)]
+       return sum([res[0] for res in results])...
+
+   ```
+
+   ```python
+   def mutate(agent):
+       # swap two move strategies
+       if random.randint(0, 1):
+           swap_index1, swap_index2 = random.sample(range(MAX_NUMBER_MOVES), 2)
+           agent[swap_index1], agent[swap_index2] = (
+               agent[swap_index2],
+               agent[swap_index1],
+           )
+       # change one move strategy to another strategy
+       else:
+           agent[random.randint(0, MAX_NUMBER_MOVES - 1)] = random.choice(STRATEGIES)
+
+       return agent
+
+   def reproduce(agent1, agent2):
+       # crossover
+       # random split of the two agents and then concatenate them
+       agent1_index = random.randint(0, MAX_NUMBER_MOVES - 1)
+       return agent1[:agent1_index] + agent2[agent1_index:]
+   ```
+
+   ```python
+   ...
+   for i in range(POPULATION_SIZE):
+        if random.random() < MUTATION_RATE:
+            new_population.append(mutate(random.choice(selected_parents)))
+        else:
+            agent1 = random.choice(selected_parents)
+            agent2 = random.choice(selected_parents)
+            new_population.append(reproduce(agent1, agent2))
+   ...
+   ```
+
+5. The agent is the evaluated against one choosing always the optimal move for 1000 games, with the following results:
+
+   ```
+   !FINAL BOSS!
+   1000 matches VS EXPERT AGENT
+   Evolved Agent -> 469 won!
+   Random Agent  -> 154 won! # for reference
+   ```
+
+We can see that the best agent found as comparable performance to the expert agent (circa 50% win rate) and is much better than a random agent while not always choosing the optimal move.
+
+## LAB9 - Genetic One Sum
+
+The task involves Write a local-search algorithm (eg. an EA) able to solve the Problem instances 1, 2, 5, and 10 on a 1000-loci genomes, using a minimum number of fitness calls. Seems simple but the fitness function is tricky in that it penalizes following not optimal strategies.
+
+After playing with code for a while using various strategies i noticed that the solutions using the fitness function were saturating to a sort of pattern with length equal to problem istance. For example with problem istance 5 the solutions was plateuing to something like `100001000010000...` while with istance 2 to `1010101010...`.
+
+This gave me the idea to allow the algorithm to split the genome in parts with a size that is dependant on the problem istance. This way the algorithm can find the optimal solution for each part and then combine them to get the final solution.
+
+While the fitness function evaluates the whole passed at once the structure of the problem allows for this approach to work. The code is short so it is fully pasted here:
+
+```python
+    def mutate(ind, fitness):
+        """mutate one random gene and return mutated part if fitness is better"""
+        f1 = fitness(ind)
+        if f1 == 1.0:
+            return ind, f1
+
+        mutated = ind.copy()
+        i = random.randrange(len(ind))
+        mutated[i] = 1 - mutated[i]
+        f2 = fitness(mutated)
+
+        # mmmmm eugenics
+        if f2 > f1:
+            return mutated, f2
+
+        return ind, f1
+
+
+    def split_progenitor(progenitor, genome_length, problem_instance):
+        """split progenitors in parts of length problem_instance"""
+        divisible = genome_length % problem_instance == 0
+
+        end = (
+            genome_length if divisible else genome_length - (genome_length % problem_instance)
+        )  # for non-divisible genome_length by problem_instance
+
+        parts = []
+        for i in range(0, end, problem_instance):
+            parts.append(progenitor[i : i + problem_instance])
+
+        if not divisible:
+            parts.append(progenitor[end:])
+
+        return parts
+
+
+    def run(problem_instance, genome_length):
+        """run the algorithm:
+        1. create progenitor
+        2. split progenitor in parts
+        3. mutate parts until fitness is 1.0
+        4. join parts in individual
+        5. return number of fitness calls and if individual is correct
+        """
+
+        fitness = lab9_lib.make_problem(problem_instance)
+
+        progenitor = random.choices([0, 1], k=genome_length)
+        parts = split_progenitor(progenitor, genome_length, problem_instance)
+
+        evolved_parts = []
+        pbar = tqdm(total=len(parts))
+        for part in parts:
+            fit = 0
+            while fit < 1.0:
+                part, fit = mutate(part, fitness)
+            evolved_parts.append(g for g in part)
+            pbar.update(1)
+
+        individual = [gene for part in evolved_parts for gene in part]
+        return fitness.calls, sum(individual) == genome_length # sum for check its not used to evaluate fitness
+```
+
+With the following results:
+
+```
+Problem instance: 1
+100%|██████████| 1000/1000 [00:00<00:00, 121701.02it/s]
+Calls, solCheck:  (1507, True)
+
+Problem instance: 2
+100%|██████████| 500/500 [00:00<00:00, 52313.71it/s]
+Calls, solCheck:  (1911, True)
+
+Problem instance: 5
+100%|██████████| 200/200 [00:00<00:00, 8916.27it/s]
+Calls, solCheck:  (3273, True)
+
+Problem instance: 10
+100%|██████████| 100/100 [00:00<00:00, 1858.69it/s]
+Calls, solCheck:  (4508, True)
+```
+
+Compared to just trying to evolve the whole genome at once the number of fitness calls is much lower as well as the algorithm is able to find a solution for all istances.
+
+**Lab 9 No Splitting**
+
+I also tried to implement a solution without the above considerations on the structure of the problem by using hill-climbing to evolve the whole genome at once.
+
+The only minor difference is that i used an _acceptance_ratio_ for the fitness of the neighbors to avoid getting stuck in local maxima and promote exploration, thius ratio is set to 1 for istacne 1 and 0.9 for the 2,5,10 istances allowing them to accept slightly worse solutions (this is similar to simulated annealing).
+
+knowing it would tend to saturate from the previous results i also added a _saturation_ counter to stop the algorithm if it doesnt find a better solution for 100 iterations.
+
+```python
+    def generate_neighbor(solution):
+        neighbor = solution.copy()
+        index_to_flip = random.randint(0, len(neighbor) - 1)
+        neighbor[index_to_flip] = 1 - neighbor[index_to_flip]
+        return neighbor
+
+
+    def hill_climbing(initial_solution, problem, fitness_func, max_iterations):
+        current_solution = initial_solution
+        current_fitness = fitness_func(current_solution)
+
+        if problem == 1:
+            acceptance_ratio = 1.0
+        else:
+            acceptance_ratio = 0.9
+
+        saturation = 0
+
+        for _ in range(max_iterations):
+            neighbor = generate_neighbor(current_solution)
+            neighbor_fitness = fitness_func(neighbor)
+
+            if neighbor_fitness >= acceptance_ratio * current_fitness:
+                current_solution = neighbor
+                current_fitness = neighbor_fitness
+                saturation = 0
+            else:
+                saturation += 1
+
+            if current_fitness >= 1.0:
+                break
+
+            if saturation > 100 and problem != 1:
+                print(" Saturation at iteration", _)
+                break
+
+        return current_solution, current_fitness
+```
+
+With the following results:
+
+```
+Problem Instance: 1
+ Final Fitness: 1.0
+ Fitness Calls: 5926
+
+Problem Instance: 2
+ Saturation at iteration 175
+ Final Fitness: 0.504
+ Fitness Calls: 177
+
+Problem Instance: 5
+ Saturation at iteration 1399
+ Final Fitness: 0.545
+ Fitness Calls: 1401
+
+Problem Instance: 10
+ Saturation at iteration 4280
+ Final Fitness: 0.53
+ Fitness Calls: 4282
+```
+
+## LAB10 - Tic-Tac-Toe Agent
+
+The task involves creating an agent to play Tic-Tac-Toe using a reinforcement algorithm. A random player and the implementation of the game was already provided.The algorithm i decided to use is Q-Learning, a model-free reinforcement learning algorithm that learns to estimate the value of an action in a particular state.
+
+I decided to train 3 different Q-Learing agents, one against random player, one against a minimax player and one against another Q agent.
+
+The minimax agent using classic minimax with a heuristic function that evaluates if the game is won at end of exploration but the score is diminisched with the number of turns taken. Since its not the focus of the lab the code is in the file but not here.
+
+The Q-Learning agent is implemented using a dictionary for the Q table and a function to update it at each turn, while using epsilon-greedy to choose a move. The code is the following:
+
+```python
+class QLearningAgent:
+    def __init__(self, epsilon=0.1, alpha=0.5, gamma=0.9):
+        self.epsilon = epsilon  # Exploration-exploitation trade-off
+        self.alpha = alpha  # Learning rate
+        self.gamma = gamma  # Discount factor
+
+        # Q-table: state-action values
+        self.q_table = {}
+
+    def save_q_table(self, filename="q_table.pickle"):
+        with open(filename, "wb") as f:
+            pickle.dump(self.q_table, f)
+
+    def load_q_table(self, filename="q_table.pickle"):
+        with open(filename, "rb") as f:
+            self.q_table = pickle.load(f)
+
+    def get_q_value(self, state, action):
+        return self.q_table.get((str(state.board), str(action)), 0.05)
+
+    def choose_move(self, state):
+        available_moves = state.get_available_moves()
+
+        if random.uniform(0, 1) < self.epsilon:
+            # Exploration:
+            return random.choice(available_moves)
+        else:
+            # Exploitation:
+            q_values = [
+                (action, self.get_q_value(state, action)) for action in available_moves
+            ]
+            best_actions = [
+                action
+                for action, q_value in q_values
+                if q_value == max([q_value for _, q_value in q_values])
+            ]
+            return random.choice(best_actions)
+
+    def update_q_value(self, state, action, next_state, reward):
+        # Q-value update using the Q-learning formula
+        self.q_table[(str(state.board), str(action))] = (
+            1 - self.alpha
+        ) * self.get_q_value(state, action) + self.alpha * (
+            reward
+            + self.gamma
+            * max(
+                [
+                    self.get_q_value(next_state, next_action)
+                    for next_action in next_state.get_available_moves()
+                ]
+            )
+        )
+
+def play_game(agent,opponent, environment,printing=False):
+    environment.reset()
+
+    while not environment.is_game_over():
+        current_state = environment
+
+        # Agent Move
+        action = agent.choose_move(current_state)
+        environment.make_move(action)
+        if printing:
+            print("Agent's turn")
+            environment.print_board()
+
+        # Check if the game is over
+        reward = 0
+        if environment.is_winner(1):
+            reward = 1
+        elif environment.is_winner(-1):
+            reward = -1
+        if not environment.is_game_over():
+            agent.update_q_value(current_state, action, environment, reward)
+        else:
+            if printing:
+                print("Agent wins" if reward == 1 else "Tie" if reward == 0 else "Opponent wins")
+            break
+
+        # Opponent Move
+        opponent_action = opponent.choose_move(environment)
+        environment.make_move(opponent_action)
+        if printing:
+            print("Opponent's turn")
+            environment.print_board()
+
+        # Check if the game is over
+        reward = 0
+        if environment.is_winner(1):
+            reward = 1
+        elif environment.is_winner(-1):
+            reward = -1
+        if not environment.is_game_over():
+            agent.update_q_value(current_state, action, environment, reward)
+        else:
+            if printing:
+                print("Agent wins" if reward == 1 else "Tie" if reward == 0 else "Opponent wins")
+            break
+
+# TRAINING
+num_episodes = 100000
+train=False
+# train=True # uncomment/comment to train/not train
+if train:
+    # RANDOM
+    agent = QLearningAgent()
+    opponent=RandomPlayer()
+    for episode in tqdm(range(num_episodes)):
+        environment = TicTacToe()
+        play_game(agent,opponent, environment)
+    agent.save_q_table("q_table_random.pkl")
+
+    # MINIMAX
+    agent = QLearningAgent()
+    opponent=MinimaxPlayer(-1)
+    for episode in tqdm(range(num_episodes)):
+        environment = TicTacToe()
+        play_game(agent,opponent, environment)
+    agent.save_q_table("q_table_minimax.pkl")
+
+    # SELF
+    agent = QLearningAgent()
+    opponent=QLearningAgent()
+    for episode in tqdm(range(num_episodes)):
+        environment = TicTacToe()
+        play_game(agent,opponent, environment)
+    agent.save_q_table("q_table_self.pkl")
+```
+
+After training the tree agents for 100000 episodes i tested them against each other for 100 games each with the following results:
+
+```
+RANDOM TRAINED AGENT VS RANDOM
+ 52 wins
+ 15 ties
+ 33 losses
+
+MINIMAX TRAINED AGENT VS MINIMAX
+ 10 wins
+ 3 ties
+ 87 losses
+
+SELF TRAINED AGENT VS SELF
+ 65 wins
+ 11 ties
+ 24 losses
+
+RANDOM TRAINED AGENT VS MINIMAX
+ 8 wins
+ 0 ties
+ 92 losses
+
+RANDOM TRAINED AGENT VS SELF
+ 55 wins
+ 16 ties
+ 29 losses
+
+MINIMAX TRAINED AGENT VS RANDOM
+ 60 wins
+ 11 ties
+ 29 losses
+
+MINIMAX TRAINED AGENT VS SELF
+ 57 wins
+ 16 ties
+ 27 losses
+
+SELF TRAINED AGENT VS RANDOM
+ 54 wins
+ 11 ties
+ 35 losses
+
+SELF TRAINED AGENT VS MINIMAX
+ 11 wins
+ 5 ties
+ 84 losses
+```
+
+As expected the minimax agent is the strongest, followed by the Q-Learning agents and finally the random agent.
+
+# PEER REVIEWS
+
+## LAB2 - Nim Peer Reviews - 24/11/2023
 
 ### https://github.com/FedeBucce/Computational_intelligence/
 
@@ -45,7 +942,7 @@ commits will be added later since already tracked by git
     Evaluation:
     - The agent using adaptive strategies is always player 0, giving it and advantage. Starting player could be random for a more fair evaluation.
 
-# LAB9 - Peer Reviews - 07/12/2023
+## LAB9 - Peer Reviews - 07/12/2023
 
 ### https://github.com/DonatoLanzillotti/Computational_Intelligence23
 
@@ -80,7 +977,7 @@ commits will be added later since already tracked by git
     **Final Comments**
     Aside some minor organization considerations the code and results look good to me.😄
 
-# LAB10 - Peer Reviews -
+## LAB10 - Peer Reviews -
 
 TODO after Christmas
 
@@ -94,7 +991,7 @@ I tried different approaches, from minimax to a Q-Learning player, ending with a
 
 Most of the approaches i tried are in the `quixo` folder aside the very catastrophic ones .
 
-# 2. The Players
+## 2. The Players
 
 ## 2.1 Random Player
 
