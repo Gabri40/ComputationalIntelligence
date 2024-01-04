@@ -6,7 +6,7 @@
 
 The files are in the `set-covering-path-search` folder. I tried to implement all the techniques learned.
 
-For basic path search the results are in the `set_covering_path_search_stats.ipynb` file where i tried to implement it with different type of queues to evaluate and learn the difference between them. The main code is the following:
+For basic path search the results are in the `set_covering_path_search_stats.ipynb` file where I tried to implement it with different type of queues to evaluate and learn the difference between them. The main code is the following:
 
 ```python
 def solve(queuetype, steps, sets):
@@ -69,7 +69,7 @@ With the Following results:
 
 ### A\* Search
 
-In the same folder in the files `sc_ps_Astar.ipynb` and `sc_ps_Astar_stats` i implemented A\* search for the set covering problem. The learing of the topic is in the first file while different tests for the algorithm on differenft problem sizes are in the second. The main code is the following:
+In the same folder in the files `sc_ps_Astar.ipynb` and `sc_ps_Astar_stats` I implemented A\* search for the set covering problem. The learing of the topic is in the first file while different tests for the algorithm on differenft problem sizes are in the second. The main code is the following:
 
 ```python
 def cost(state):
@@ -80,7 +80,7 @@ def cost(state):
 def heuristic(state, sets):
     """Calculate the number of uncovered elements in U"""
     uncovered = np.logical_not(
-        reduce(np.logical_or, [sets[i] for i in state.taken], np.zeros(PROBLEM_SIZE))
+        reduce(np.logical_or, [sets[i] for I in state.taken], np.zeros(PROBLEM_SIZE))
     )
     remaining_elements = np.sum(uncovered)
     return remaining_elements
@@ -151,23 +151,23 @@ And the results:
 
 ### Single State Methods
 
-In the folder `set-covering-ss` i implemented two single state methond to solve the same hill clambing problem as before, Hill Climbing and Simulated annealing.
+In the folder `set-covering-ss` I implemented two single state methond to solve the same hill clambing problem as before, Hill Climbing and Simulated annealing.
 
-The problem definition is the same as for path search, the code i develod is the following:
+The problem definition is the same as for path search, the code I develod is the following:
 
 **Helper functins and Heuristics**
 
 ```python
   def covered(taken):
       return np.sum(
-          reduce(np.logical_or, [SETS[i] for i in taken], np.zeros(PROBLEM_SIZE))
+          reduce(np.logical_or, [SETS[i] for I in taken], np.zeros(PROBLEM_SIZE))
       )
 
 
   def overlap(taken):
       # spots that are coveredby just one set in take list
 
-      matrix = np.stack([SETS[i] for i in taken], axis=-1)
+      matrix = np.stack([SETS[i] for I in taken], axis=-1)
 
       return np.sum(np.sum(matrix, axis=1) > 1)
 
@@ -188,8 +188,8 @@ The problem definition is the same as for path search, the code i develod is the
   def successor(state):
     return [
         State(state.taken + [i], state.cost + 1, h1(state.taken + [i]))
-        for i in range(NUMBER_SET)
-        if i not in state.taken
+        for I in range(NUMBER_SET)
+        if I not in state.taken
     ]
 ```
 
@@ -258,7 +258,7 @@ Overlap : 488
 
 ## Evolutionary Algorithms
 
-In the folder `evolutionary-algorithms` i tried to learn the basics of evolutionary algorithms by solving different problems, after writing a short theory note `ES.md`.
+In the folder `evolutionary-algorithms` I tried to learn the basics of evolutionary algorithms by solving different problems, after writing a short theory note `ES.md`.
 
 The list of problems was given by chatGPT asking for an increament in difficulty each time and is the following:
 
@@ -267,7 +267,7 @@ The list of problems was given by chatGPT asking for an increament in difficulty
 - TSP
 - Multy-Objective KnapSack
 
-In all of them i tried to implement and learn the basics of the algorithms while trying different heuristics for the population as well as different types of ES.
+In all of them I tried to implement and learn the basics of the algorithms while trying different heuristics for the population as well as different types of ES.
 
 # LABS
 
@@ -275,9 +275,9 @@ In all of them i tried to implement and learn the basics of the algorithms while
 
 The folder `lab1-set-covering-a-star` contains the implementation of A\* for the set covering problem.
 
-The problem definition is the same as for path search, here i tried to implement various heuristic for the algorithm and compare them. The A\* algorithm is a standard implementation using a heap queue for the frontier and a set for the closed set.
+The problem definition is the same as for path search, here I tried to implement various heuristic for the algorithm and compare them. The A\* algorithm is a standard implementation using a heap queue for the frontier and a set for the closed set.
 
-The diffent heuristics i tried are the following:
+The diffent heuristics I tried are the following:
 
 ```python
 def TRIVIAL_heuristic(state, sets):
@@ -297,7 +297,7 @@ def MRSC_heuristic(state, sets):
     """
 
     uncovered = reduce(
-        np.logical_or, [sets[i] for i in state.taken], np.zeros(len(sets[0]))
+        np.logical_or, [sets[i] for I in state.taken], np.zeros(len(sets[0]))
     )
 
     not_taken_subsets = NUMBER_SET - len(state.taken)
@@ -317,7 +317,7 @@ def MSC_heuristic(state, sets):
     """
 
     uncovered = reduce(
-        np.logical_or, [sets[i] for i in state.taken], np.zeros(len(sets[0]))
+        np.logical_or, [sets[i] for I in state.taken], np.zeros(len(sets[0]))
     )
 
     return (-np.sum(uncovered) / len(state.taken)) if len(state.taken) > 0 else 0
@@ -339,10 +339,10 @@ def ASC_heuristic(state, sets):
     """
 
     uncovered = reduce(
-        np.logical_or, [sets[i] for i in state.taken], np.zeros(len(sets[0]))
+        np.logical_or, [sets[i] for I in state.taken], np.zeros(len(sets[0]))
     )
 
-    remaining_sets = [sets[i] for i in range(NUMBER_SET) if i not in state.taken]
+    remaining_sets = [sets[i] for I in range(NUMBER_SET) if I not in state.taken]
 
     average_size = np.sum([np.sum(s) for s in remaining_sets]) / len(remaining_sets)
 
@@ -368,7 +368,7 @@ def DENSITY_heuristic(state, sets):
     """
 
     uncovered = reduce(
-        np.logical_or, [sets[i] for i in state.taken], np.zeros(len(sets[0]))
+        np.logical_or, [sets[i] for I in state.taken], np.zeros(len(sets[0]))
     )
 
     # Calculate the density of uncovered elements in U
@@ -435,13 +435,13 @@ The task involves creating agents to play Nim, a subtraction game where the goal
 
 The code of the lab provided already some functions to choose a move using different strategies (`pure_random`,`gabriele`,`optimal`) as well as a function `adaptive` to use in the agent.
 
-The way i decided to implement the agent is the following:
+The way I decided to implement the agent is the following:
 
 1. The `adaptive` function uses and updates the parameter `love_small` to choose the lowest row with the lowest number of objects.
 
    ```python
    def adaptive1(state: Nim) -> Nimply:
-       """A strategy that can adapt its parameters"""
+       """A strategy that can adapt it is parameters"""
        genome = {"love_small": 0.5}  # set initial value for love_small
 
        if state.rows[0] <= 3:  # if lowest row has 3 or less objects
@@ -472,7 +472,7 @@ The way i decided to implement the agent is the following:
 
    - The longest Nim Game is If every player takes exactly one match each turn, so we have a maximum amount of moves an agent can make.
    - There are 4 strategies to choose a move (the ones above) at each turn.
-   - So we can initialize aa population where each agent's genome is a list of strategies to use consecutively chosen at random with a weight for each strategy (lower for the optimal one so we dont get just a optimal agent).
+   - So we can initialize a population where each agent's genome is a list of strategies (to use consecutively when playing) chosen at random with a weight for each strategy (lower for the optimal one so we do not get just a optimal agent).
 
    ```python
    def generate_random_agent_2():
@@ -518,7 +518,7 @@ The way i decided to implement the agent is the following:
 
    ```python
    ...
-   for i in range(POPULATION_SIZE):
+   for I in range(POPULATION_SIZE):
         if random.random() < MUTATION_RATE:
             new_population.append(mutate(random.choice(selected_parents)))
         else:
@@ -528,7 +528,7 @@ The way i decided to implement the agent is the following:
    ...
    ```
 
-5. The agent is the evaluated against one choosing always the optimal move for 1000 games, with the following results:
+5. The agent is the evaluated against an agent that chooses always the optimal move for 1000 games, with the following results:
 
    ```
    !FINAL BOSS!
@@ -537,13 +537,13 @@ The way i decided to implement the agent is the following:
    Random Agent  -> 154 won! # for reference
    ```
 
-We can see that the best agent found as comparable performance to the expert agent (circa 50% win rate) and is much better than a random agent while not always choosing the optimal move.
+We can see that the best agent found has comparable performance to the expert agent (circa 50% win rate) and is much better than a random agent while not always choosing the optimal move.
 
 ## LAB9 - Genetic One Sum
 
 The task involves Write a local-search algorithm (eg. an EA) able to solve the Problem instances 1, 2, 5, and 10 on a 1000-loci genomes, using a minimum number of fitness calls. Seems simple but the fitness function is tricky in that it penalizes following not optimal strategies.
 
-After playing with code for a while using various strategies i noticed that the solutions using the fitness function were saturating to a sort of pattern with length equal to problem istance. For example with problem istance 5 the solutions was plateuing to something like `100001000010000...` while with istance 2 to `1010101010...`.
+After playing with code for a while using various strategies I noticed that the solutions using the fitness function were saturating to a sort of pattern with length equal to problem istance. For example with problem istance 5 the solutions was plateuing to something like `100001000010000...` while with istance 2 to `1010101010...`.
 
 This gave me the idea to allow the algorithm to split the genome in parts with a size that is dependant on the problem istance. This way the algorithm can find the optimal solution for each part and then combine them to get the final solution.
 
@@ -557,7 +557,7 @@ While the fitness function evaluates the whole passed at once the structure of t
             return ind, f1
 
         mutated = ind.copy()
-        i = random.randrange(len(ind))
+        I = random.randrange(len(ind))
         mutated[i] = 1 - mutated[i]
         f2 = fitness(mutated)
 
@@ -577,8 +577,8 @@ While the fitness function evaluates the whole passed at once the structure of t
         )  # for non-divisible genome_length by problem_instance
 
         parts = []
-        for i in range(0, end, problem_instance):
-            parts.append(progenitor[i : i + problem_instance])
+        for I in range(0, end, problem_instance):
+            parts.append(progenitor[i : I + problem_instance])
 
         if not divisible:
             parts.append(progenitor[end:])
@@ -610,7 +610,7 @@ While the fitness function evaluates the whole passed at once the structure of t
             pbar.update(1)
 
         individual = [gene for part in evolved_parts for gene in part]
-        return fitness.calls, sum(individual) == genome_length # sum for check its not used to evaluate fitness
+        return fitness.calls, sum(individual) == genome_length # sum for check it is not used to evaluate fitness
 ```
 
 With the following results:
@@ -639,9 +639,9 @@ Compared to just trying to evolve the whole genome at once the number of fitness
 
 I also tried to implement a solution without the above considerations on the structure of the problem by using hill-climbing to evolve the whole genome at once.
 
-The only minor difference is that i used an _acceptance_ratio_ for the fitness of the neighbors to avoid getting stuck in local maxima and promote exploration, thius ratio is set to 1 for istacne 1 and 0.9 for the 2,5,10 istances allowing them to accept slightly worse solutions (this is similar to simulated annealing).
+The only minor difference is that I used an _acceptance_ratio_ for the fitness of the neighbors to avoid getting stuck in local maxima and promote exploration, thius ratio is set to 1 for istacne 1 and 0.9 for the 2,5,10 istances allowing them to accept slightly worse solutions (this is similar to simulated annealing).
 
-knowing it would tend to saturate from the previous results i also added a _saturation_ counter to stop the algorithm if it doesnt find a better solution for 100 iterations.
+Knowing it would tend to saturate from the previous results I also added a _saturation_ counter to stop the algorithm if it does not find a better solution after 100 iterations.
 
 ```python
     def generate_neighbor(solution):
@@ -708,11 +708,11 @@ Problem Instance: 10
 
 ## LAB10 - Tic-Tac-Toe Agent
 
-The task involves creating an agent to play Tic-Tac-Toe using a reinforcement algorithm. A random player and the implementation of the game was already provided.The algorithm i decided to use is Q-Learning, a model-free reinforcement learning algorithm that learns to estimate the value of an action in a particular state.
+The task involves creating an agent to play Tic-Tac-Toe using a reinforcement algorithm. A random player and the implementation of the game was already provided.The algorithm I decided to use is Q-Learning, a model-free reinforcement learning algorithm that learns to estimate the value of an action in a particular state.
 
 I decided to train 3 different Q-Learing agents, one against random player, one against a minimax player and one against another Q agent.
 
-The minimax agent using classic minimax with a heuristic function that evaluates if the game is won at end of exploration but the score is diminisched with the number of turns taken. Since its not the focus of the lab the code is in the file but not here.
+The minimax agent using classic minimax with a heuristic function that evaluates if the game is won at end of exploration but the score is diminisched with the number of turns taken. Since it is not the focus of the lab the code is in the file but not here.
 
 The Q-Learning agent is implemented using a dictionary for the Q table and a function to update it at each turn, while using epsilon-greedy to choose a move. The code is the following:
 
@@ -817,7 +817,7 @@ def play_game(agent,opponent, environment,printing=False):
             break
 
 # TRAINING
-num_episodes = 100000
+num_episodes = 100_000
 train=False
 # train=True # uncomment/comment to train/not train
 if train:
@@ -846,7 +846,7 @@ if train:
     agent.save_q_table("q_table_self.pkl")
 ```
 
-After training the tree agents for 100000 episodes i tested them against each other for 100 games each with the following results:
+After training the tree agents for 100_000 episodes I tested them against each other for 100 games each with the following results:
 
 ```
 RANDOM TRAINED AGENT VS RANDOM
@@ -965,7 +965,7 @@ As expected the minimax agent is the strongest, followed by the Q-Learning agent
 ### https://github.com/ahmadrezafrh/Computational-Intelligence
 
     **Organization and Structure**
-    No readme. The code itself is clear but some comments would help a first glance understanding of what each component does. The the graphs showing the fitness evolution are a nice addition. 😊
+    No readme. The code it iself is clear but some comments would help a first glance understanding of what each component does. The the graphs showing the fitness evolution are a nice addition. 😊
 
     **Algorithm Implementation**
     The algorithm implements correctly a normal EA with some nice additions:
@@ -989,7 +989,7 @@ The goal of this project is to implement a agent for the game of Quixo.
 
 I tried different approaches, from minimax to a Q-Learning player, ending with a player using Deep Q-Learning with a replay buffer.
 
-Most of the approaches i tried are in the `quixo` folder aside the very catastrophic ones .
+Most of the approaches I tried are in the `quixo` folder aside the very catastrophic ones .
 
 ## 2. The Players
 
@@ -1001,7 +1001,7 @@ Was already implemented in the lab, was used to test the other players.
 
 First attempt at implementing an agent based on some simple heuristic after reading the rules of the game and looking at some gameplay online.
 
-This was really bad and its not commited to the repo.
+This was really bad and it is not commited to the repo.
 
 **Main ideas:**
 
@@ -1014,7 +1014,7 @@ def heuristic(self, board, player):
         def count_lines(board, player):
             # Count the number of lines with 4 pieces of the player ie 4 tiles with value =self.index
             count = 0
-            for i in range(5):
+            for I in range(5):
                 if np.sum(board[i:] == player) >= 4:
                     count += 1
                 if np.sum(board[:, i] == player) >= 4:
@@ -1055,18 +1055,18 @@ def heuristic(self, board, player):
 ```
 
 **Issues:**
-I dont think the game of Quixo is suited for a heuristic approach (or rather i just couldn't define a good one): the number of possible moves is high and with the board changing drastically at each turn i found it hard to define a good heuristic.
+I dont think the game of Quixo is suited for a heuristic approach (or rather I just couldn't define a good one): the number of possible moves is high and with the board changing drastically at each turn I found it hard to define a good heuristic.
 
 The result were indistinguishable from just choosing a random action.
 
 **Takeaways:**
 
-- Using a copy and paste version of the \_\_move, \_\_take, \_\_slide and most imporantly a function to find all the possible moves for a certain player is a was a good idea and i brought them over to other approaches with refinements.
+- Using a copy and paste version of the \_\_move, \_\_take, \_\_slide and most imporantly a function to find all the possible moves for a certain player is a was a good idea and I brought them over to other approaches with refinements.
 
 ## 2.3 Q-Learning Player
 
-After the failure of the heuristic approach i decided to try a reinforcement learning approach after looking at some inspiration online. First time trying to implement a RL algorithm so i was a bit lost at the beginning.
-Went over various iterations and rewrites befire getting an understanding of what i was doing adn getting a working player.
+After the failure of the heuristic approach I decided to try a reinforcement learning approach after looking at some inspiration online. First time trying to implement a RL algorithm so I was a bit lost at the beginning.
+Went over various iterations and rewrites befire getting an understanding of what I was doing adn getting a working player.
 
 **Main ideas:**
 
@@ -1196,7 +1196,7 @@ Went over various iterations and rewrites befire getting an understanding of wha
 
 **Issues:**
 
-While i can see it working with enough compute the main issue is the size of the Q table: the number of possible states is huge and the Q table grows exponentially with the number of games played.
+While I can see it working with enough compute the main issue is the size of the Q table: the number of possible states is huge and the Q table grows exponentially with the number of games played.
 
 After training for 100_000 games the Q table was already 400MB and the player while improving was still not much better than a random player.
 
@@ -1204,7 +1204,7 @@ Q table is not commited for size reasons.
 
 **Takeaways:**
 
-- Most important takeaway is making the board agnostic to the player index which i didn't do before as well as converting the board adn actions to a more compact representation (will be useful later when finally implementing DQL).
+- Most important takeaway is making the board agnostic to the player index which I didn't do before as well as converting the board adn actions to a more compact representation (will be useful later when finally implementing DQL).
 
 - The Q table was a good idea but the size of it is a problem.
 
@@ -1212,7 +1212,7 @@ Q table is not commited for size reasons.
 
 ## 2.4 Minimax Player
 
-Tried my hand at a minimax player using alpha beta pruning. Like with the heuristic player i found it hard to define a good heuristic for the game of Quixo.
+Tried my hand at a minimax player using alpha beta pruning. Like with the heuristic player I found it hard to define a good heuristic for the game of Quixo.
 
 **Main ideas:**
 
@@ -1226,7 +1226,7 @@ Tried my hand at a minimax player using alpha beta pruning. Like with the heuris
 
         # max number in a row col or diag for each player
         mp, mo = 0, 0
-        for i in range(5):
+        for I in range(5):
             mp = max(mp, np.count_nonzero(board[i] == self.player_index))
             mo = max(mo, np.count_nonzero(board[i] == 1 - self.player_index))
             mp = max(mp, np.count_nonzero(board[:, i] == self.player_index))
@@ -1242,7 +1242,7 @@ Tried my hand at a minimax player using alpha beta pruning. Like with the heuris
         boardeval += 2**cp - 2**op
 
         # # Core count
-        # for i in range(1, 4):
+        # for I in range(1, 4):
         #     for j in range(1, 4):
         #         boardeval += (
         #             1
@@ -1254,10 +1254,10 @@ Tried my hand at a minimax player using alpha beta pruning. Like with the heuris
 
         # Edge count
         edge_positions = (
-            [(0, i) for i in range(1, 4)]
-            + [(4, i) for i in range(1, 4)]
-            + [(i, 0) for i in range(1, 4)]
-            + [(i, 4) for i in range(1, 4)]
+            [(0, i) for I in range(1, 4)]
+            + [(4, i) for I in range(1, 4)]
+            + [(i, 0) for I in range(1, 4)]
+            + [(i, 4) for I in range(1, 4)]
         )
         for x, y in edge_positions:
             boardeval += (
@@ -1283,22 +1283,22 @@ Tried my hand at a minimax player using alpha beta pruning. Like with the heuris
   ```
 
 **Issues:**
-While the algorithm works i still had issues trying to find a combination things to consider and the weights for them in the heuristic function that would make the player play well.
+While the algorithm works I still had issues trying to find a combination things to consider and the weights for them in the heuristic function that would make the player play well.
 
 Again it was winning only slightly more than a random player.
 
 **Takeaways:**
-Doing some research online i found some informations:
+Doing some research online I found some informations:
 
 - Quixo is a solved game ()[] but with exponential complexity ()[]. I couldn't however follow the implementation of the algorithm in the paper.
 
-- The structure of the game can leading to repeating patterns and this can hinder performance of a minimax algorithm. I dont doubt hoever that my implementation of it and heuristic function were not good enough to reach this limitations. However after getting these informations i decided to move to Deep Q-Learning.
+- The structure of the game can leading to repeating patterns and this can hinder performance of a minimax algorithm. I dont doubt hoever that my implementation of it and heuristic function were not good enough to reach this limitations. However after getting these informations I decided to move to Deep Q-Learning.
 
 ## 2.5 Deep Q-Learning Player
 
-Final player implemented, it took some time to understand how to implement it and i had to rewrite it many times bifore getting an understanding of what i was doing.
+Final player implemented, it took some time to understand how to implement it and I had to rewrite it many times bifore getting an understanding of what I was doing.
 
-The main struggle i faced was trying to understand how to read and evalualte the output of the network after giving it the current state as well as how to evaluate the loss and update the network.
+The main struggle I faced was trying to understand how to read and evalualte the output of the network after giving it the current state as well as how to evaluate the loss and update the network.
 
 The complete dql player code is also copied all at once at the end of the log.
 
@@ -1350,7 +1350,7 @@ The complete dql player code is also copied all at once at the end of the log.
 - The model is a pytorch neural network with the following structure.
 
   - The input will be the flattened board converted to a neutral representation
-  - The output will be a 4\*5\*5 tensor. So it will be viewed as a 4 5\*5 matrices. Each matrix corrispond to one of the move directions (TOP, BOTTOM, LEFT, RIGHT) and each cell of the matrix will contain the Q value for that move in that position.
+  - The output will be a 4\*5\*5 tensor. So it will be viewed as a 4 5\*5 matrices. Each matrix corresponds to one of the move directions (TOP, BOTTOM, LEFT, RIGHT) and each cell of the matrix will contain the Q value for that move in that position.
 
   ```python
     class DQN(nn.Module):
@@ -1366,7 +1366,7 @@ The complete dql player code is also copied all at once at the end of the log.
             return self.fc3(x)
   ```
 
-- The models output a Q value for every cell and for every move but not all of them are possible (either illegal or the board configuration doesn't allow it). To account for this the output tensor is first converted to the (4,5,5) view described above before being masked with a mask created from all the possible actions at the current turn. Then the indices of the action with the highest Q value are taken and converted to a valid move format. The whole process is done with the following functions inside the player class:
+- The models output a Q value for every cell and for every move but not all of them are possible (either illegal or the board configuration does not allow it). To account for this the output tensor is first converted to the (4,5,5) view described above before being masked with a mask created from all the possible actions at the current turn. Then the indices of the action with the highest Q value are taken and converted to a valid move format. The whole process is done with the following functions inside the player class:
 
   ```python
   def get_model_output(self, game) -> torch.Tensor:
@@ -1501,7 +1501,7 @@ The complete dql player code is also copied all at once at the end of the log.
   ```
 
 **Issues:**
-Many Deep Q Learnig implementations use a target network to avoid the network overfitting on the last moves of the game while this doesn't.
+Many Deep Q Learnig implementations use a target network to avoid the network overfitting on the last moves of the game while this does not.
 
 **Takeaways:**
 The network is able to beat a random player more than 80% of the times on average both as first and second player.
@@ -1517,9 +1517,9 @@ The network is able to beat a random player more than 80% of the times on averag
 
 These results are obtained after trainging the player for 1000 games with the replay buffer and the value of epsilon for the greedy choice is 0.1 .
 
-Given the decisely worse performance of the other players i implemented i consider this a good result and don't think it is necessary to implement evaluation against them as well as implementing a target network.
+Given the decisely worse performance of the other players I implemented I consider this a good result and don't think it is necessary to implement evaluation against them as well as implementing a target network.
 
-This seems the best approach given both the results and the structure of the game itself.
+This seems the best approach given both the results and the structure of the game it iself.
 
 # Final DQL Player
 
