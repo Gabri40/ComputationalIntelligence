@@ -1,3 +1,5 @@
+I will reply and close issues on this repository after the exam is done, thank you for the comments and suggestions.
+
 # Computational Intelligence
 
 The course introduces various computational methods and data processing that can be labeled "artificial intelligence".
