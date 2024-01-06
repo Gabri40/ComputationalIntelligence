@@ -979,7 +979,28 @@ As expected the minimax agent is the strongest, followed by the Q-Learning agent
 
 ## LAB10 - Peer Reviews -
 
-TODO after Christmas
+### https://github.com/turymac/computational-intelligence
+
+    First of all congratulations on your impressive results!
+
+    Given the perfect performance there is not much to say aside some minor considerations:
+
+    - the readme could be a bit more extensive on how the code works
+    - defining a game and player class might make the actual code a bit more readable (but it is already pretty nicely commented)
+
+    Again this is really good work and well done! 😄
+
+### https://github.com/Kinepo/CI-Polito
+
+    First of all congratulations on the good result, getting your agent to win around 90% of the games!
+
+    However the are some organizations issues you should consider:
+
+    - structuring the repo with folders and readmes will make it a lot easier to navigate and understand your work
+    - on the same note adding comments or taking advantage of markdown in the nb will greatly improve the ability to understand and follow your code
+    - no need to have the whole training run print :D
+
+    The code itself and the result show a good understanding of DL so there is not much to add, well done and good luck! 😄
 
 # QUIXO
 
