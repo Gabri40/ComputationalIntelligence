@@ -1,6 +1,6 @@
 # s318944 Gabriele Quaranta - Computational Intelligence Activity Log
 
-## Set Covering
+# Set Covering
 
 ### Path Search Studies
 
@@ -219,7 +219,7 @@ With the following results:
 ```
 PROBLEM_SIZE = 500  # dimension of the finite set U
 NUMBER_SET = 1000  # number of subsets in the collection S
-Found   : State(taken=[177, 810, 477, 442, 615, 142, 95, 185, 0], cost=9, heuristic=500)
+Found   : State(taken=[177,810,477,442,615,142,95,185,0], cost=9,heuristic=500)
 Is sol  : True
 Overlap : 439
 ```
@@ -251,12 +251,15 @@ With the following results:
 ```
 PROBLEM_SIZE = 500  # dimension of the finite set U
 NUMBER_SET = 1000  # number of subsets in the collection S
-Found   : State(taken=[223, 53, 303, 384, 867, 167, 88, 753, 239, 944, 764, 192, 435, 128, 570, 78], cost=16, heuristic=500)
+Found   : State(taken=[223, 53, 303, 384, 867, 167, 88, 753, 239, 944, 764, 192, 435, 128, 570, 78]
+        , cost=16, heuristic=500)
 Is sol  : True
 Overlap : 488
 ```
 
-## Evolutionary Algorithms
+<div style="page-break-after: always"></div>
+
+# Evolutionary Algorithms
 
 In the folder `evolutionary-algorithms` I tried to learn the basics of evolutionary algorithms by solving different problems, after writing a short theory note `ES.md`.
 
@@ -388,13 +391,18 @@ The problem was framed by ChatGPT in a very fun way:
 
     MOKP - Robot Fleet
 
-    You are in charge of selecting a team of robots for a space mission. You have a limited energy reserve on your spacecraft, and you need to decide which robots to take with you. Each robot has three attributes: energy consumption, repairability, and task completion time.
+    You are in charge of selecting a team of robots for a space mission. You have a limited energy reserve on your
+    spacecraft, and you need to decide which robots to take with you.
+    Each robot has three attributes: energy consumption, repairability, and task completion time.
 
-    - Energy Consumption (EC): The amount of energy a robot consumes during the mission. Lower values are preferred as they reduce the need for recharging or refueling.
+    - Energy Consumption (EC): The amount of energy a robot consumes during the mission.
+      Lower values are preferred as they reduce the need for recharging or refueling.
 
-    - Repairability (R): A measure of how easily a robot can be repaired if it malfunctions during the mission. Higher values indicate greater repairability.
+    - Repairability (R): A measure of how easily a robot can be repaired if it malfunctions during the mission.
+      Higher values indicate greater repairability.
 
-    - Task Completion Time (TCT): The time it takes for a robot to complete its assigned tasks. Shorter task completion times are preferred for efficiency.
+    - Task Completion Time (TCT): The time it takes for a robot to complete its assigned tasks.
+      Shorter task completion times are preferred for efficiency.
 
     You have a fixed energy reserve (C) for your spacecraft, and you want to maximize the following objectives:
 
@@ -406,7 +414,9 @@ The problem was framed by ChatGPT in a very fun way:
 
     - Given a set of n robots, each with attributes (EC_i, R_i, TCT_i), where i = 1 to n.
     - Given a spacecraft with a energy reserve (C).
-    - Find a subset of robots to include in the mission that maximizes repairability, minimizes energy consumption, and minimizes task completion time, while ensuring that the total energy consumption (sum of EC_i) of the selected robots does not exceed the energy reserve (C).
+    - Find a subset of robots to include in the mission that maximizes repairability, minimizes energy consumption,
+      and minimizes task completion time, while ensuring that the total energy consumption (sum of EC_i) of the
+      selected robots does not exceed the energy reserve (C).
 
 The first step was to define the population, the robots are created as named tuples with the three attributes, and an invetory of robots is created with random values for each attribute. The population is the created as a set of binary genomes where each gene represents if a robot from inventory is taken to the ship or not.
 
@@ -435,7 +445,8 @@ The second one utilizes weights for each fo the attributes and returns 0 if we o
 
 ```python
 # min(sum(ec)), max(sum(r)), min(sum(tct)) while sum(ec) <= ENERGY_RESERVE
-# maximize reliability and minimize time to task completion and total energy -> max(r/tct) while sum(ec) <= ENERGY_RESERVE
+# maximize reliability and minimize time to task completion and total energy
+#  -> max(r/tct) while sum(ec) <= ENERGY_RESERVE
 def fitness1(genome):
     count = genome.count(1)
     ec = 0
@@ -528,6 +539,8 @@ I then run the problem for all combinations of the two fitnesses and the two rep
     Mean TCT /100: 15.4
 
 Notably the first fitness functions ends up only choosing one single robot with the highest repairability and the lowest task completion time thus keeping total EC at a minimum, while the second one chooses a more balanced solution.
+
+<div style="page-break-after: always"></div>
 
 # LABS
 
@@ -1157,6 +1170,8 @@ SELF TRAINED AGENT VS MINIMAX
 
 As expected the minimax agent is the strongest, followed by the Q-Learning agents and finally the random agent.
 
+<div style="page-break-after: always"></div>
+
 # PEER REVIEWS
 
 ## LAB2 - Nim Peer Reviews - 24/11/2023
@@ -1177,7 +1192,8 @@ As expected the minimax agent is the strongest, followed by the Q-Learning agent
     **Negative Aspects**
 
     Evaluation:
-    - The agent using adaptive strategies is always player 0, giving it and advantage. Starting player could be random for a more fair evaluation.
+    - The agent using adaptive strategies is always player 0, giving it and advantage.
+      Starting player could be random for a more fair evaluation.
 
 ### https://github.com/AllegraRoberto/Computational-Intelligence/
 
@@ -1190,7 +1206,8 @@ As expected the minimax agent is the strongest, followed by the Q-Learning agent
     - Well-defined functions and comments improves organization and readability
 
     Evaluation:
-    - Extensive evaluation of the best candidates and comparisons of the results between generations allow for a good analysis if the ES used.
+    - Extensive evaluation of the best candidates and comparisons of the results between generations allow
+      for a good analysis if the ES used.
 
     Overall the lab seems well implemented 😄
 
@@ -1200,24 +1217,29 @@ As expected the minimax agent is the strongest, followed by the Q-Learning agent
     - Some code within the simulation function is repeated often, could be clearer with some refactoring.
 
     Evaluation:
-    - The agent using adaptive strategies is always player 0, giving it and advantage. Starting player could be random for a more fair evaluation.
+    - The agent using adaptive strategies is always player 0, giving it and advantage.
+      Starting player could be random for a more fair evaluation.
 
 ## LAB9 - Peer Reviews - 07/12/2023
 
 ### https://github.com/DonatoLanzillotti/Computational_Intelligence23
 
     **Overall Structure and Organization**
-    The code is well structured and organized using classes for different components of the evolutionary algorithm. This makes the code more readable and easy to understand. The plots for the fitness are a nice addition but the readme could be a bit more extensive.😊
+    The code is well structured and organized using classes for different components of the evolutionary algorithm.
+    This makes the code more readable and easy to understand. The plots for the fitness are a nice addition
+    but the readme could be a bit more extensive.😊
 
     **EA Implementation**
-    The EA algorithm has a standard structure with some good improvement like the check of saturation and the addiction of the already evaluated genomes dict to save computation.
+    The EA algorithm has a standard structure with some good improvement like the check of saturation and the
+    addiction of the already evaluated genomes dict to save computation.
 
     The increase in mutation probability seems to me a bit steep:
 
         if cnt % 25 == 0 and cnt > 0:
                         self.mutation_prob = self.mutation_prob * 1.25
 
-    Given the starting point of .35 and 1.25 multiplayer the probability surpasses 1 after just 5 updates, but this was maybe by design.
+    Given the starting point of .35 and 1.25 multiplayer the probability surpasses 1 after just 5 updates,
+    but this was maybe by design.
 
     **Final Comments**
     Overall the code and the results look good to me!😄
@@ -1225,11 +1247,13 @@ As expected the minimax agent is the strongest, followed by the Q-Learning agent
 ### https://github.com/ahmadrezafrh/Computational-Intelligence
 
     **Organization and Structure**
-    No readme. The code it iself is clear but some comments would help a first glance understanding of what each component does. The the graphs showing the fitness evolution are a nice addition. 😊
+    No readme. The code it iself is clear but some comments would help a first glance understanding of what each
+    component does. The the graphs showing the fitness evolution are a nice addition. 😊
 
     **Algorithm Implementation**
     The algorithm implements correctly a normal EA with some nice additions:
-    - Switching between mutation and crossover mode if the algo reaches a "patience" limit is a good idea and seems to provide a good exploration/exploitation balance
+    - Switching between mutation and crossover mode if the algo reaches a "patience" limit is a good idea and seems
+      to provide a good exploration/exploitation balance
     - Early termination based on the amount of the above switches to mutation
 
     The actual algorithm could be implement as a function to avoid cells repetition.
@@ -1246,7 +1270,8 @@ As expected the minimax agent is the strongest, followed by the Q-Learning agent
     Given the perfect performance there is not much to say aside some minor considerations:
 
     - the readme could be a bit more extensive on how the code works
-    - defining a game and player class might make the actual code a bit more readable (but it is already pretty nicely commented)
+    - defining a game and player class might make the actual code a bit more readable (but it is already
+      pretty nicely commented)
 
     Again this is really good work and well done! 😄
 
@@ -1257,10 +1282,14 @@ As expected the minimax agent is the strongest, followed by the Q-Learning agent
     However the are some organizations issues you should consider:
 
     - structuring the repo with folders and readmes will make it a lot easier to navigate and understand your work
-    - on the same note adding comments or taking advantage of markdown in the nb will greatly improve the ability to understand and follow your code
+    - on the same note adding comments or taking advantage of markdown in the nb will greatly improve the ability
+      to understand and follow your code
     - no need to have the whole training run print :D
 
-    The code itself and the result show a good understanding of DL so there is not much to add, well done and good luck! 😄
+    The code itself and the result show a good understanding of DL so there is not much to add,
+    well done and good luck! 😄
+
+<div style="page-break-after: always"></div>
 
 # QUIXO
 
@@ -1801,6 +1830,8 @@ These results are obtained after trainging the player for 1000 games with the re
 Given the decisely worse performance of the other players I implemented I consider this a good result and don't think it is necessary to implement evaluation against them as well as implementing a target network.
 
 This seems the best approach given both the results and the structure of the game it iself.
+
+<div style="page-break-after: always"></div>
 
 # Final DQL Player
 
