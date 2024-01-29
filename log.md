@@ -260,14 +260,274 @@ Overlap : 488
 
 In the folder `evolutionary-algorithms` I tried to learn the basics of evolutionary algorithms by solving different problems, after writing a short theory note `ES.md`.
 
+In all of them I tried to implement and learn the basics of the algorithms while trying different heuristics for the population as well as different types of ES.
+
 The list of problems was given by chatGPT asking for an increament in difficulty each time and is the following:
 
-- One Max
-- KnapSack
-- TSP
-- Multy-Objective KnapSack
+### **One Max**
 
-In all of them I tried to implement and learn the basics of the algorithms while trying different heuristics for the population as well as different types of ES.
+First one with a bit "cheaty" solution where mutation just flips a random bit to one with a certain probability.
+
+```python
+mutated_child = "".join(
+    ["1" if random.random() < mutation_rate else bit for bit in child]
+)
+new_population.append(mutated_child)
+```
+
+### **KnapSack**
+
+The second one is the knapsack problem where we have a set of items with a weight and a value and we want to maximize the value of the items we can put in a knapsack with a certain weight limit (Each item with just one copy).
+The main takeaway from this problem was the use of different fitness functions.
+
+The first one was just the sum of the values of the items in the knapsack and would set to 0 the fitness of a solution if it were to overshoot capacity, making the solution not take in cosideration for future evolution.
+
+```python
+def fitness1(chromosome):
+    weight = 0
+    value = 0
+    for i, gene in enumerate(chromosome):
+        if gene == 1:
+            weight += all_items[i][0]
+            value += all_items[i][1]
+    if weight > BACKPACK_CAPACITY:
+        return 0
+    return value
+```
+
+The second one was the same but trying to give partial credits even to solution the slightly overfit capacity and gave much better results.
+
+```python
+def fitness2(chromosome):
+    weight = 0
+    value = 0
+    for i, gene in enumerate(chromosome):
+        if gene == 1 :
+            weight += all_items[i][0]
+            value += all_items[i][1]
+    if weight > BACKPACK_CAPACITY:
+        return value/(weight-BACKPACK_CAPACITY)
+    return value
+```
+
+### **TSP**
+
+The TSP is a well-known NP-hard problem, and evolutionary algorithms offer a heuristic approach to finding good solutions when an exhaustive search is impractical for large instances.
+
+The first step for this was using a distance matrix to represent the map.
+
+```python
+def generate_distance_matrix(num_cities, seed=None):
+    if seed is not None:
+        random.seed(seed)  # seed to reproduce res
+
+    # empty distance matrix filled with zeros
+    distance_matrix = [[0] * num_cities for _ in range(num_cities)]
+
+    # random city coordinates
+    city_coordinates = [
+        (random.uniform(0, 100), random.uniform(0, 100)) for _ in range(num_cities)
+    ]
+
+    for i in range(num_cities):
+        for j in range(i + 1, num_cities):
+            x1, y1 = city_coordinates[i]
+            x2, y2 = city_coordinates[j]
+            distance = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+            distance = int(distance)
+            # Populate both symmetric elements of the matrix
+            distance_matrix[i][j] = distance
+            distance_matrix[j][i] = distance
+
+    return distance_matri
+```
+
+And the fitness function was the sum of the distances between the cities in the order of the chromosome.
+
+```python
+def fitness(tour, distance_matrix):
+    tour_distance = 0
+    num_cities = len(tour)
+
+    for i in range(num_cities):
+        from_city = tour[i]
+        to_city = tour[(i + 1) % num_cities]
+        tour_distance += distance_matrix[from_city][to_city]
+
+    return tour_distance
+```
+
+Parent selection was done using tournament selection and the new population is generated using only mutation where we swap two cities position in the cromosome (so swapping the visit order).
+
+```python
+def reproduce(tournaments_winners):
+    new_population = []
+    for j in range(POPULATION_SIZE):
+        child = random.sample(tournaments_winners, 1)[0]
+
+        if random.random() < MUTATION_RATE:
+            # mutate by swapping two cities
+            swap_index1, swap_index2 = random.sample(range(NUMBER_CITIES), 2)
+            child[swap_index1], child[swap_index2] = (
+                child[swap_index2],
+                child[swap_index1],
+            )
+
+        new_population.append(child)
+
+    return new_population
+```
+
+This approach worked pretty well even with a large number of cities (1500).
+
+### **Multy-Objective KnapSack**
+
+Last problem in this section, "extends the classic Knapsack Problem by introducing multiple conflicting objectives to optimize simultaneously. This problem is of interest when you have several criteria to consider when selecting items for the knapsack, and these criteria may conflict with each other".
+
+The problem was framed by ChatGPT in a very fun way:
+
+    MOKP - Robot Fleet
+
+    You are in charge of selecting a team of robots for a space mission. You have a limited energy reserve on your spacecraft, and you need to decide which robots to take with you. Each robot has three attributes: energy consumption, repairability, and task completion time.
+
+    - Energy Consumption (EC): The amount of energy a robot consumes during the mission. Lower values are preferred as they reduce the need for recharging or refueling.
+
+    - Repairability (R): A measure of how easily a robot can be repaired if it malfunctions during the mission. Higher values indicate greater repairability.
+
+    - Task Completion Time (TCT): The time it takes for a robot to complete its assigned tasks. Shorter task completion times are preferred for efficiency.
+
+    You have a fixed energy reserve (C) for your spacecraft, and you want to maximize the following objectives:
+
+    1. Maximize the total repairability (sum of repairability values) of the selected robots.
+    2. Minimize the total energy consumption (sum of energy consumption values) of the selected robots.
+    3. Minimize the total task completion time (sum of task completion time values) of the selected robots.
+
+    Formally, the Multi-Objective Knapsack Problem can be described as follows:
+
+    - Given a set of n robots, each with attributes (EC_i, R_i, TCT_i), where i = 1 to n.
+    - Given a spacecraft with a energy reserve (C).
+    - Find a subset of robots to include in the mission that maximizes repairability, minimizes energy consumption, and minimizes task completion time, while ensuring that the total energy consumption (sum of EC_i) of the selected robots does not exceed the energy reserve (C).
+
+The first step was to define the population, the robots are created as named tuples with the three attributes, and an invetory of robots is created with random values for each attribute. The population is the created as a set of binary genomes where each gene represents if a robot from inventory is taken to the ship or not.
+
+```python
+# define named tuple for the robot
+Robot = namedtuple("Robot", ["ec", "r", "tct"])
+
+# build robots inventory
+robots = [
+    Robot(
+        random.randint(1, MAX_EC),
+        random.randint(1, MAX_R),
+        random.randint(1, MAX_TCT),
+    )
+    for _ in range(NUMBER_ROBOT)
+]
+
+# initialize population -> genome is a list of 0 and 1 (genes) (0: robot not selected, 1: robot selected)
+population = [
+    [random.randint(0, 1) for _ in range(NUMBER_ROBOT)] for _ in range(POPULATION_SIZE)
+]
+```
+
+I then definied two fitness functions, the first one takes the sum of the attributes of the robots in the ship and returns 0 if the total energy overshoots capacity otherwise returns _repairability/task completion time_ since we want to maximize the first and minimize the second.
+The second one utilizes weights for each fo the attributes and returns 0 if we overshoot energy or the linear combinations of the weights and total attributes.
+
+```python
+# min(sum(ec)), max(sum(r)), min(sum(tct)) while sum(ec) <= ENERGY_RESERVE
+# maximize reliability and minimize time to task completion and total energy -> max(r/tct) while sum(ec) <= ENERGY_RESERVE
+def fitness1(genome):
+    count = genome.count(1)
+    ec = 0
+    r = 0
+    tct = 0
+    for i, gene in enumerate(genome):
+        if gene == 1:
+            ec += robots[i].ec
+            r += robots[i].r
+            tct += robots[i].tct
+    # penalize if energy reserve is exceeded or genome is all 0
+    if ec > ENERGY_RESERVE or count == 0:
+        return 0
+    return r / tct
+
+def fitness2(genome):
+    # linear combo of weights and vars -> set by trial and error
+    W_EC = -0.5
+    W_R = 0.3
+    W_TCT = -0.2
+
+    count = genome.count(1)
+    ec = 0
+    r = 0
+    tct = 0
+
+    for i, gene in enumerate(genome):
+        if gene == 1:
+            ec += robots[i].ec
+            r += robots[i].r
+            tct += robots[i].tct
+
+    fitness = W_EC * ec + W_R * r + W_TCT * tct
+    if ec > ENERGY_RESERVE or fitness <= 0:
+        return 0
+    return fitness
+```
+
+For offspring generation I implemented two different methods, the first one uses both recombination and mutation, the second one only mutation.
+The mutation is a bit flip.
+
+```python
+def reproduce1(parent1, parent2):
+    # recombination
+    child1 = parent1[: NUMBER_ROBOT // 2] + parent2[NUMBER_ROBOT // 2 :]
+    child2 = parent2[: NUMBER_ROBOT // 2] + parent1[NUMBER_ROBOT // 2 :]
+
+    # mutation
+    child1 = [1 - gene if random.random() < MUTATION_RATE else gene for gene in child1]
+    child2 = [
+        1 - gene if random.random() < MUTATION_RATE else gene for gene in child2
+    ]  # chance of mutation ie invert gene
+
+    return child1, child2
+
+def reproduce2(parent1, parent2):
+    # mutation
+    child1 = [1 - gene if random.random() < MUTATION_RATE else gene for gene in parent1]
+    child2 = [
+        1 - gene if random.random() < MUTATION_RATE else gene for gene in parent2
+    ]  # chance of mutation ie invert gene
+
+    return child1, child2
+```
+
+I then run the problem for all combinations of the two fitnesses and the two reproduction methods:
+
+    fitness1 - reproduce1
+    Best solution: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    Total EC     : 1
+    Mean R /100  : 48.0
+    Mean TCT /100: 1.0
+
+    fitness2  - reproduce1
+    Best solution: [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0]
+    Total EC     : 51
+    Mean R /100  : 69.75
+    Mean TCT /100: 14.0
+
+    fitness1  - reproduce2
+    Best solution: [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    Total EC     : 1
+    Mean R /100  : 48.0
+    Mean TCT /100: 1.0
+
+    fitness2  - reproduce2
+    Best solution: [0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0]
+    Total EC     : 55
+    Mean R /100  : 70.0
+    Mean TCT /100: 15.4
+
+Notably the first fitness functions ends up only choosing one single robot with the highest repairability and the lowest task completion time thus keeping total EC at a minimum, while the second one chooses a more balanced solution.
 
 # LABS
 
